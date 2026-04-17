@@ -1,0 +1,256 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── ENUMS ──────────────────────────────────────────────
+
+enum AdminRole {
+  SUPER_ADMIN
+  ADMIN
+}
+
+enum GalleryCategory {
+  COLLECTION
+  MUSE
+}
+
+enum RentalStatus {
+  AVAILABLE
+  RENTED
+  MAINTENANCE
+  RETIRED
+}
+
+enum ServiceType {
+  CUSTOM_DESIGN
+  ALTERATION
+  RENTAL
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+  NO_SHOW
+}
+
+enum EmailType {
+  CONFIRMATION
+  REMINDER
+  CANCELLATION
+  RESCHEDULE
+}
+
+enum EmailStatus {
+  PENDING
+  SENT
+  FAILED
+}
+
+enum ContentType {
+  TEXT
+  RICHTEXT
+  IMAGE
+  VIDEO
+}
+
+// ─── MODELS ─────────────────────────────────────────────
+
+model AdminUser {
+  id           String    @id @default(uuid())
+  email        String    @unique
+  passwordHash String    @map("password_hash")
+  name         String
+  role         AdminRole @default(ADMIN)
+  isActive     Boolean   @default(true) @map("is_active")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  blockedDates  BlockedDate[]
+  siteContents  SiteContent[]  @relation("UpdatedByAdmin")
+  termsVersions TermsVersion[]
+
+  @@map("admin_users")
+}
+
+model GalleryItem {
+  id            String          @id @default(uuid())
+  category      GalleryCategory
+  title         String
+  description   String?         @db.Text
+  imageUrl      String          @map("image_url")
+  imagePublicId String?         @map("image_public_id")
+  sortOrder     Int             @default(0) @map("sort_order")
+  isVisible     Boolean         @default(true) @map("is_visible")
+  createdAt     DateTime        @default(now()) @map("created_at")
+  updatedAt     DateTime        @updatedAt @map("updated_at")
+
+  @@map("gallery_items")
+}
+
+model RentalProduct {
+  id              String       @id @default(uuid())
+  name            String
+  description     String?      @db.Text
+  sizes           String[]     @default([])
+  pricePerDay     Decimal      @map("price_per_day") @db.Decimal(12, 2)
+  depositAmount   Decimal      @default(0) @map("deposit_amount") @db.Decimal(12, 2)
+  imageUrls       String[]     @default([]) @map("image_urls")
+  imagePublicIds  String[]     @default([]) @map("image_public_ids")
+  status          RentalStatus @default(AVAILABLE)
+  isVisible       Boolean      @default(true) @map("is_visible")
+  sortOrder       Int          @default(0) @map("sort_order")
+  createdAt       DateTime     @default(now()) @map("created_at")
+  updatedAt       DateTime     @updatedAt @map("updated_at")
+
+  bookingItems BookingItem[]
+
+  @@map("rental_products")
+}
+
+model ServiceTypeConfig {
+  id              String      @id @default(uuid())
+  serviceType     ServiceType @unique @map("service_type")
+  displayName     String      @map("display_name")
+  description     String?     @db.Text
+  durationMinutes Int         @map("duration_minutes")
+  isActive        Boolean     @default(true) @map("is_active")
+  createdAt       DateTime    @default(now()) @map("created_at")
+  updatedAt       DateTime    @updatedAt @map("updated_at")
+
+  @@map("service_type_configs")
+}
+
+model Booking {
+  id               String        @id @default(uuid())
+  clientName       String        @map("client_name")
+  clientEmail      String        @map("client_email")
+  clientPhone      String?       @map("client_phone")
+  serviceType      ServiceType   @map("service_type")
+  durationMinutes  Int           @map("duration_minutes")
+  startTime        DateTime      @map("start_time")
+  endTime          DateTime      @map("end_time")
+  notes            String?       @db.Text
+  specialRequests  String?       @map("special_requests") @db.Text
+  status           BookingStatus @default(PENDING)
+  manageToken      String        @unique @map("manage_token")
+  googleEventId    String?       @map("google_event_id")
+  termsVersionId   String?       @map("terms_version_id")
+  termsAccepted    Boolean       @default(false) @map("terms_accepted")
+  termsAcceptedAt  DateTime?     @map("terms_accepted_at")
+  cancellationReason String?     @map("cancellation_reason") @db.Text
+  createdAt        DateTime      @default(now()) @map("created_at")
+  updatedAt        DateTime      @updatedAt @map("updated_at")
+
+  termsVersion TermsVersion? @relation(fields: [termsVersionId], references: [id])
+  bookingItems BookingItem[]
+  emailLogs    EmailLog[]
+
+  @@index([clientEmail])
+  @@index([startTime])
+  @@index([status])
+  @@map("bookings")
+}
+
+model BookingItem {
+  id              String   @id @default(uuid())
+  bookingId       String   @map("booking_id")
+  rentalProductId String   @map("rental_product_id")
+  selectedSize    String?  @map("selected_size")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  booking       Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  rentalProduct RentalProduct @relation(fields: [rentalProductId], references: [id])
+
+  @@map("booking_items")
+}
+
+model BlockedDate {
+  id            String   @id @default(uuid())
+  date          DateTime @db.Date
+  startTime     String?  @map("start_time") // HH:mm format, null = full day
+  endTime       String?  @map("end_time")   // HH:mm format, null = full day
+  reason        String?
+  googleEventId String?  @map("google_event_id")
+  blockedById   String?  @map("blocked_by_id")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  blockedBy AdminUser? @relation(fields: [blockedById], references: [id])
+
+  @@map("blocked_dates")
+}
+
+model BusinessHours {
+  id        String  @id @default(uuid())
+  dayOfWeek Int     @map("day_of_week") // 0=Sunday, 6=Saturday
+  openTime  String  @map("open_time")   // HH:mm format
+  closeTime String  @map("close_time")  // HH:mm format
+  isClosed  Boolean @default(false) @map("is_closed")
+
+  @@unique([dayOfWeek])
+  @@map("business_hours")
+}
+
+model TermsVersion {
+  id           String   @id @default(uuid())
+  versionLabel String   @map("version_label")
+  content      String   @db.Text
+  isActive     Boolean  @default(false) @map("is_active")
+  publishedAt  DateTime? @map("published_at")
+  createdAt    DateTime @default(now()) @map("created_at")
+  createdById  String?  @map("created_by_id")
+
+  createdBy AdminUser? @relation(fields: [createdById], references: [id])
+  bookings  Booking[]
+
+  @@map("terms_versions")
+}
+
+model SiteContent {
+  id          String      @id @default(uuid())
+  pageKey     String      @unique @map("page_key")
+  contentType ContentType @default(TEXT) @map("content_type")
+  value       String      @db.Text
+  updatedAt   DateTime    @updatedAt @map("updated_at")
+  updatedById String?     @map("updated_by_id")
+
+  updatedBy AdminUser? @relation("UpdatedByAdmin", fields: [updatedById], references: [id])
+
+  @@map("site_contents")
+}
+
+model EmailLog {
+  id           String      @id @default(uuid())
+  bookingId    String?     @map("booking_id")
+  recipient    String
+  subject      String
+  type         EmailType
+  status       EmailStatus @default(PENDING)
+  sentAt       DateTime?   @map("sent_at")
+  errorMessage String?     @map("error_message") @db.Text
+  createdAt    DateTime    @default(now()) @map("created_at")
+
+  booking Booking? @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+
+  @@map("email_logs")
+}
+
+model GoogleCalendarConfig {
+  id           String   @id @default(uuid())
+  accessToken  String   @map("access_token") @db.Text
+  refreshToken String   @map("refresh_token") @db.Text
+  calendarId   String   @map("calendar_id")
+  tokenExpiry  DateTime @map("token_expiry")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("google_calendar_config")
+}
