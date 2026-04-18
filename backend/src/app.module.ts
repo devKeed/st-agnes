@@ -8,6 +8,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { UploadModule } from './modules/upload/upload.module';
 import { RentalsModule } from './modules/rentals/rentals.module';
+import { GalleryModule } from './modules/gallery/gallery.module';
 import { JwtAuthGuard, RolesGuard } from './common/guards';
 
 @Module({
@@ -18,6 +19,7 @@ import { JwtAuthGuard, RolesGuard } from './common/guards';
     AuthModule,
     UploadModule,
     RentalsModule,
+    GalleryModule,
   ],
   controllers: [AppController],
   providers: [

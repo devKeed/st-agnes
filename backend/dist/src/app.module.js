@@ -17,6 +17,7 @@ const prisma_module_1 = require("./prisma/prisma.module");
 const auth_module_1 = require("./modules/auth/auth.module");
 const upload_module_1 = require("./modules/upload/upload.module");
 const rentals_module_1 = require("./modules/rentals/rentals.module");
+const gallery_module_1 = require("./modules/gallery/gallery.module");
 const guards_1 = require("./common/guards");
 let AppModule = class AppModule {
 };
@@ -30,6 +31,7 @@ exports.AppModule = AppModule = __decorate([
             auth_module_1.AuthModule,
             upload_module_1.UploadModule,
             rentals_module_1.RentalsModule,
+            gallery_module_1.GalleryModule,
         ],
         controllers: [app_controller_1.AppController],
         providers: [
