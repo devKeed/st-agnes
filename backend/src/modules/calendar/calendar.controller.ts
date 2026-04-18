@@ -1,8 +1,9 @@
-import { Controller, Get, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Patch, Post, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AdminRole } from '@prisma/client';
 import { CurrentUser, Public, Roles } from '../../common/decorators';
 import { CalendarService } from './calendar.service';
+import { UpdateCalendarIdDto } from './dto/update-calendar-id.dto';
 
 @ApiTags('Google Calendar')
 @Controller('calendar')
@@ -34,6 +35,17 @@ export class CalendarController {
   @ApiOperation({ summary: 'Check Google Calendar connection status (admin)' })
   getStatus() {
     return this.calendarService.getStatus();
+  }
+
+  @Patch('calendar-id')
+  @Roles(AdminRole.SUPER_ADMIN, AdminRole.ADMIN)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary:
+      'Update the connected Google Calendar ID without reconnecting OAuth (admin)',
+  })
+  updateCalendarId(@Body() dto: UpdateCalendarIdDto) {
+    return this.calendarService.updateCalendarId(dto.calendarId);
   }
 
   @Post('disconnect')

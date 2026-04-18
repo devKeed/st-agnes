@@ -3,6 +3,7 @@ import {
   Injectable,
   InternalServerErrorException,
   Logger,
+  NotFoundException,
 } from '@nestjs/common';
 import { google } from 'googleapis';
 import * as crypto from 'crypto';
@@ -130,6 +131,50 @@ export class CalendarService {
     };
   }
 
+  async updateCalendarId(calendarId: string) {
+    const normalizedCalendarId = calendarId.trim();
+    if (!normalizedCalendarId) {
+      throw new BadRequestException('calendarId is required.');
+    }
+
+    const config = await this.prisma.googleCalendarConfig.findFirst({
+      orderBy: { createdAt: 'asc' },
+    });
+
+    if (!config) {
+      throw new NotFoundException('Google Calendar is not connected.');
+    }
+
+    const ctx = await this.getCalendarContext();
+    if (!ctx) {
+      throw new NotFoundException('Google Calendar is not connected.');
+    }
+
+    try {
+      await this.executeCalendarCall(async () =>
+        ctx.calendar.calendars.get({ calendarId: normalizedCalendarId }),
+      );
+    } catch (error) {
+      if (this.isGoogleNotFound(error)) {
+        throw new BadRequestException(
+          'The provided calendarId was not found or is not accessible by this Google account.',
+        );
+      }
+      throw error;
+    }
+
+    await this.prisma.googleCalendarConfig.update({
+      where: { id: config.id },
+      data: { calendarId: normalizedCalendarId },
+    });
+
+    return {
+      success: true,
+      calendarId: normalizedCalendarId,
+      message: 'Google Calendar target updated successfully.',
+    };
+  }
+
   async disconnect() {
     await this.prisma.googleCalendarConfig.deleteMany({});
     this.logger.log('Google Calendar disconnected.');
@@ -194,15 +239,7 @@ export class CalendarService {
     const event = await this.executeCalendarCall(async () =>
       ctx.calendar.events.insert({
         calendarId: ctx.config.calendarId,
-        requestBody: {
-          summary: `St Agnes - ${booking.serviceType} (${booking.clientName})`,
-          description: this.buildBookingDescription(booking),
-          start: { dateTime: booking.startTime.toISOString(), timeZone: this.timezone() },
-          end: { dateTime: booking.endTime.toISOString(), timeZone: this.timezone() },
-          attendees: booking.clientEmail
-            ? [{ email: booking.clientEmail, displayName: booking.clientName }]
-            : undefined,
-        },
+        requestBody: this.buildBookingEventRequestBody(booking),
       }),
     );
 
@@ -232,15 +269,7 @@ export class CalendarService {
         ctx.calendar.events.update({
           calendarId: ctx.config.calendarId,
           eventId: booking.googleEventId!,
-          requestBody: {
-            summary: `St Agnes - ${booking.serviceType} (${booking.clientName})`,
-            description: this.buildBookingDescription(booking),
-            start: { dateTime: booking.startTime.toISOString(), timeZone: this.timezone() },
-            end: { dateTime: booking.endTime.toISOString(), timeZone: this.timezone() },
-            attendees: booking.clientEmail
-              ? [{ email: booking.clientEmail, displayName: booking.clientName }]
-              : undefined,
-          },
+          requestBody: this.buildBookingEventRequestBody(booking),
         }),
       );
     } catch (error) {
@@ -472,8 +501,44 @@ export class CalendarService {
       .join('\n');
   }
 
+  private buildBookingEventRequestBody(booking: {
+    id: string;
+    serviceType: string;
+    clientName: string;
+    clientEmail: string;
+    clientPhone: string | null;
+    notes: string | null;
+    specialRequests: string | null;
+    startTime: Date;
+    endTime: Date;
+  }) {
+    return {
+      summary: `St Agnes - ${booking.serviceType} (${booking.clientName})`,
+      description: this.buildBookingDescription(booking),
+      start: {
+        dateTime: booking.startTime.toISOString(),
+        timeZone: this.timezone(),
+      },
+      end: {
+        dateTime: booking.endTime.toISOString(),
+        timeZone: this.timezone(),
+      },
+      attendees: this.shouldAddClientAsAttendee()
+        ? [{ email: booking.clientEmail, displayName: booking.clientName }]
+        : undefined,
+    };
+  }
+
   private timezone(): string {
     return process.env.TIMEZONE || 'Africa/Lagos';
+  }
+
+  private shouldAddClientAsAttendee(): boolean {
+    const raw = process.env.GOOGLE_ADD_CLIENT_AS_ATTENDEE;
+    if (!raw) return false;
+
+    const normalized = raw.trim().toLowerCase();
+    return normalized === 'true' || normalized === '1' || normalized === 'yes';
   }
 
   private signState(adminId: string): string {
