@@ -7,6 +7,7 @@ import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { UploadModule } from './modules/upload/upload.module';
+import { RentalsModule } from './modules/rentals/rentals.module';
 import { JwtAuthGuard, RolesGuard } from './common/guards';
 
 @Module({
@@ -16,6 +17,7 @@ import { JwtAuthGuard, RolesGuard } from './common/guards';
     PrismaModule,
     AuthModule,
     UploadModule,
+    RentalsModule,
   ],
   controllers: [AppController],
   providers: [
