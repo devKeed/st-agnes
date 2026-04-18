@@ -13,6 +13,7 @@ import { ContentModule } from './modules/content/content.module';
 import { TermsModule } from './modules/terms/terms.module';
 import { AvailabilityModule } from './modules/availability/availability.module';
 import { BookingsModule } from './modules/bookings/bookings.module';
+import { CalendarModule } from './modules/calendar/calendar.module';
 import { JwtAuthGuard, RolesGuard } from './common/guards';
 
 @Module({
@@ -28,6 +29,7 @@ import { JwtAuthGuard, RolesGuard } from './common/guards';
     TermsModule,
     AvailabilityModule,
     BookingsModule,
+    CalendarModule,
   ],
   controllers: [AppController],
   providers: [

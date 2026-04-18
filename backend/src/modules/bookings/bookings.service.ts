@@ -10,6 +10,7 @@ import { Booking, BookingStatus, Prisma, RentalStatus, ServiceType } from '@pris
 import { nanoid } from 'nanoid';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AvailabilityService } from '../availability/availability.service';
+import { CalendarService } from '../calendar/calendar.service';
 import {
   CreateBookingDto,
   QueryBookingsDto,
@@ -37,6 +38,7 @@ export class BookingsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly availabilityService: AvailabilityService,
+    private readonly calendarService: CalendarService,
   ) {}
 
   // ─── Public: create booking ──────────────────────────────────────────────────
@@ -174,6 +176,8 @@ export class BookingsService {
       `Booking created: ${booking.id} (${booking.serviceType}) for ${booking.clientEmail}`,
     );
 
+    this.calendarService.syncBookingCreated(booking.id);
+
     const manageUrl = `${frontendUrl}/booking-manage/${manageToken}`;
     return { booking, manageUrl };
   }
@@ -206,7 +210,7 @@ export class BookingsService {
       );
     }
 
-    return this.prisma.booking.update({
+    const updated = await this.prisma.booking.update({
       where: { id: booking.id },
       data: {
         status: BookingStatus.CANCELLED,
@@ -214,6 +218,10 @@ export class BookingsService {
       },
       include: bookingWithItems,
     });
+
+    this.calendarService.syncBookingCancelled(updated.id);
+
+    return updated;
   }
 
   async rescheduleByToken(
@@ -231,7 +239,7 @@ export class BookingsService {
     const newStart = new Date(dto.startTime);
     const newEnd = new Date(newStart.getTime() + booking.durationMinutes * 60_000);
 
-    return this.prisma.$transaction(async (tx) => {
+    const updated = await this.prisma.$transaction(async (tx) => {
       const isAvailable = await this.availabilityService.isSlotAvailable(
         newStart,
         newEnd,
@@ -250,6 +258,10 @@ export class BookingsService {
         include: bookingWithItems,
       });
     });
+
+    this.calendarService.syncBookingRescheduled(updated.id);
+
+    return updated;
   }
 
   // ─── Admin: list / detail / status ──────────────────────────────────────────
@@ -311,8 +323,8 @@ export class BookingsService {
     id: string,
     dto: UpdateBookingStatusDto,
   ): Promise<BookingWithItems> {
-    await this.findOne(id);
-    return this.prisma.booking.update({
+    const existing = await this.findOne(id);
+    const updated = await this.prisma.booking.update({
       where: { id },
       data: {
         status: dto.status,
@@ -322,6 +334,15 @@ export class BookingsService {
       },
       include: bookingWithItems,
     });
+
+    if (
+      dto.status === BookingStatus.CANCELLED &&
+      existing.status !== BookingStatus.CANCELLED
+    ) {
+      this.calendarService.syncBookingCancelled(updated.id);
+    }
+
+    return updated;
   }
 
   // ─── Private helpers ─────────────────────────────────────────────────────────

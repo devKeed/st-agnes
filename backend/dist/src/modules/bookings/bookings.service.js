@@ -16,6 +16,7 @@ const client_1 = require("@prisma/client");
 const nanoid_1 = require("nanoid");
 const prisma_service_1 = require("../../prisma/prisma.service");
 const availability_service_1 = require("../availability/availability.service");
+const calendar_service_1 = require("../calendar/calendar.service");
 const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
 const bookingWithItems = client_1.Prisma.validator()({
     bookingItems: {
@@ -25,10 +26,12 @@ const bookingWithItems = client_1.Prisma.validator()({
 let BookingsService = BookingsService_1 = class BookingsService {
     prisma;
     availabilityService;
+    calendarService;
     logger = new common_1.Logger(BookingsService_1.name);
-    constructor(prisma, availabilityService) {
+    constructor(prisma, availabilityService, calendarService) {
         this.prisma = prisma;
         this.availabilityService = availabilityService;
+        this.calendarService = calendarService;
     }
     async create(dto) {
         if (!dto.termsAccepted) {
@@ -118,6 +121,7 @@ let BookingsService = BookingsService_1 = class BookingsService {
             return newBooking;
         });
         this.logger.log(`Booking created: ${booking.id} (${booking.serviceType}) for ${booking.clientEmail}`);
+        this.calendarService.syncBookingCreated(booking.id);
         const manageUrl = `${frontendUrl}/booking-manage/${manageToken}`;
         return { booking, manageUrl };
     }
@@ -138,7 +142,7 @@ let BookingsService = BookingsService_1 = class BookingsService {
             booking.status === client_1.BookingStatus.COMPLETED) {
             throw new common_1.BadRequestException(`Booking is already ${booking.status.toLowerCase()}.`);
         }
-        return this.prisma.booking.update({
+        const updated = await this.prisma.booking.update({
             where: { id: booking.id },
             data: {
                 status: client_1.BookingStatus.CANCELLED,
@@ -146,6 +150,8 @@ let BookingsService = BookingsService_1 = class BookingsService {
             },
             include: bookingWithItems,
         });
+        this.calendarService.syncBookingCancelled(updated.id);
+        return updated;
     }
     async rescheduleByToken(token, dto) {
         const booking = await this.findByToken(token);
@@ -155,7 +161,7 @@ let BookingsService = BookingsService_1 = class BookingsService {
         }
         const newStart = new Date(dto.startTime);
         const newEnd = new Date(newStart.getTime() + booking.durationMinutes * 60_000);
-        return this.prisma.$transaction(async (tx) => {
+        const updated = await this.prisma.$transaction(async (tx) => {
             const isAvailable = await this.availabilityService.isSlotAvailable(newStart, newEnd, booking.id, tx);
             if (!isAvailable) {
                 throw new common_1.ConflictException('The new time slot is not available. Please choose a different time.');
@@ -166,6 +172,8 @@ let BookingsService = BookingsService_1 = class BookingsService {
                 include: bookingWithItems,
             });
         });
+        this.calendarService.syncBookingRescheduled(updated.id);
+        return updated;
     }
     async findAll(query) {
         const page = query.page ?? 1;
@@ -215,8 +223,8 @@ let BookingsService = BookingsService_1 = class BookingsService {
         return booking;
     }
     async updateStatus(id, dto) {
-        await this.findOne(id);
-        return this.prisma.booking.update({
+        const existing = await this.findOne(id);
+        const updated = await this.prisma.booking.update({
             where: { id },
             data: {
                 status: dto.status,
@@ -226,6 +234,11 @@ let BookingsService = BookingsService_1 = class BookingsService {
             },
             include: bookingWithItems,
         });
+        if (dto.status === client_1.BookingStatus.CANCELLED &&
+            existing.status !== client_1.BookingStatus.CANCELLED) {
+            this.calendarService.syncBookingCancelled(updated.id);
+        }
+        return updated;
     }
     assertEditWindow(booking) {
         const hoursUntilStart = booking.startTime.getTime() - Date.now();
@@ -238,6 +251,7 @@ exports.BookingsService = BookingsService;
 exports.BookingsService = BookingsService = BookingsService_1 = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [prisma_service_1.PrismaService,
-        availability_service_1.AvailabilityService])
+        availability_service_1.AvailabilityService,
+        calendar_service_1.CalendarService])
 ], BookingsService);
 //# sourceMappingURL=bookings.service.js.map
