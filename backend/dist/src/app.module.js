@@ -23,6 +23,7 @@ const terms_module_1 = require("./modules/terms/terms.module");
 const availability_module_1 = require("./modules/availability/availability.module");
 const bookings_module_1 = require("./modules/bookings/bookings.module");
 const calendar_module_1 = require("./modules/calendar/calendar.module");
+const email_module_1 = require("./modules/email/email.module");
 const guards_1 = require("./common/guards");
 let AppModule = class AppModule {
 };
@@ -42,6 +43,7 @@ exports.AppModule = AppModule = __decorate([
             availability_module_1.AvailabilityModule,
             bookings_module_1.BookingsModule,
             calendar_module_1.CalendarModule,
+            email_module_1.EmailModule,
         ],
         controllers: [app_controller_1.AppController],
         providers: [

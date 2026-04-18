@@ -10,7 +10,8 @@ import { Booking, BookingStatus, Prisma, RentalStatus, ServiceType } from '@pris
 import { nanoid } from 'nanoid';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AvailabilityService } from '../availability/availability.service';
-import { CalendarService } from '../calendar/calendar.service';
+import { CalendarService } from '../calendar/calendar.service.js';
+import { EmailService } from '../email/email.service';
 import {
   CreateBookingDto,
   QueryBookingsDto,
@@ -39,6 +40,7 @@ export class BookingsService {
     private readonly prisma: PrismaService,
     private readonly availabilityService: AvailabilityService,
     private readonly calendarService: CalendarService,
+    private readonly emailService: EmailService,
   ) {}
 
   // ─── Public: create booking ──────────────────────────────────────────────────
@@ -177,6 +179,7 @@ export class BookingsService {
     );
 
     this.calendarService.syncBookingCreated(booking.id);
+    this.emailService.sendConfirmation(booking.id);
 
     const manageUrl = `${frontendUrl}/booking-manage/${manageToken}`;
     return { booking, manageUrl };
@@ -220,6 +223,7 @@ export class BookingsService {
     });
 
     this.calendarService.syncBookingCancelled(updated.id);
+    this.emailService.sendCancellation(updated.id);
 
     return updated;
   }
@@ -260,6 +264,7 @@ export class BookingsService {
     });
 
     this.calendarService.syncBookingRescheduled(updated.id);
+    this.emailService.sendReschedule(updated.id);
 
     return updated;
   }
@@ -340,6 +345,7 @@ export class BookingsService {
       existing.status !== BookingStatus.CANCELLED
     ) {
       this.calendarService.syncBookingCancelled(updated.id);
+      this.emailService.sendCancellation(updated.id);
     }
 
     return updated;

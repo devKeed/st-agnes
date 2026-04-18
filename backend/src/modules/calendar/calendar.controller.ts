@@ -2,7 +2,7 @@ import { Body, Controller, Get, Patch, Post, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AdminRole } from '@prisma/client';
 import { CurrentUser, Public, Roles } from '../../common/decorators';
-import { CalendarService } from './calendar.service';
+import { CalendarService } from './calendar.service.js';
 import { UpdateCalendarIdDto } from './dto/update-calendar-id.dto';
 
 @ApiTags('Google Calendar')

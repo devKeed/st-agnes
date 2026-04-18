@@ -17,7 +17,7 @@ const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
 const client_1 = require("@prisma/client");
 const decorators_1 = require("../../common/decorators");
-const calendar_service_1 = require("./calendar.service");
+const calendar_service_js_1 = require("./calendar.service.js");
 const update_calendar_id_dto_1 = require("./dto/update-calendar-id.dto");
 let CalendarController = class CalendarController {
     calendarService;
@@ -95,6 +95,6 @@ __decorate([
 exports.CalendarController = CalendarController = __decorate([
     (0, swagger_1.ApiTags)('Google Calendar'),
     (0, common_1.Controller)('calendar'),
-    __metadata("design:paramtypes", [calendar_service_1.CalendarService])
+    __metadata("design:paramtypes", [calendar_service_js_1.CalendarService])
 ], CalendarController);
 //# sourceMappingURL=calendar.controller.js.map

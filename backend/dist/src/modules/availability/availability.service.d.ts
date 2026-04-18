@@ -1,6 +1,6 @@
 import { BlockedDate, BusinessHours, Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
-import { CalendarService } from '../calendar/calendar.service';
+import { CalendarService } from '../calendar/calendar.service.js';
 import { BlockDateDto, QueryAvailabilityDto, UpdateBusinessHoursDto } from './dto';
 export interface TimeSlot {
     start: string;

@@ -13,7 +13,7 @@ exports.AvailabilityService = void 0;
 const common_1 = require("@nestjs/common");
 const client_1 = require("@prisma/client");
 const prisma_service_1 = require("../../prisma/prisma.service");
-const calendar_service_1 = require("../calendar/calendar.service");
+const calendar_service_js_1 = require("../calendar/calendar.service.js");
 const LAGOS_OFFSET_MINUTES = 60;
 let AvailabilityService = class AvailabilityService {
     prisma;
@@ -217,6 +217,6 @@ exports.AvailabilityService = AvailabilityService;
 exports.AvailabilityService = AvailabilityService = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [prisma_service_1.PrismaService,
-        calendar_service_1.CalendarService])
+        calendar_service_js_1.CalendarService])
 ], AvailabilityService);
 //# sourceMappingURL=availability.service.js.map

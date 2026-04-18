@@ -16,7 +16,8 @@ const client_1 = require("@prisma/client");
 const nanoid_1 = require("nanoid");
 const prisma_service_1 = require("../../prisma/prisma.service");
 const availability_service_1 = require("../availability/availability.service");
-const calendar_service_1 = require("../calendar/calendar.service");
+const calendar_service_js_1 = require("../calendar/calendar.service.js");
+const email_service_1 = require("../email/email.service");
 const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
 const bookingWithItems = client_1.Prisma.validator()({
     bookingItems: {
@@ -27,11 +28,13 @@ let BookingsService = BookingsService_1 = class BookingsService {
     prisma;
     availabilityService;
     calendarService;
+    emailService;
     logger = new common_1.Logger(BookingsService_1.name);
-    constructor(prisma, availabilityService, calendarService) {
+    constructor(prisma, availabilityService, calendarService, emailService) {
         this.prisma = prisma;
         this.availabilityService = availabilityService;
         this.calendarService = calendarService;
+        this.emailService = emailService;
     }
     async create(dto) {
         if (!dto.termsAccepted) {
@@ -122,6 +125,7 @@ let BookingsService = BookingsService_1 = class BookingsService {
         });
         this.logger.log(`Booking created: ${booking.id} (${booking.serviceType}) for ${booking.clientEmail}`);
         this.calendarService.syncBookingCreated(booking.id);
+        this.emailService.sendConfirmation(booking.id);
         const manageUrl = `${frontendUrl}/booking-manage/${manageToken}`;
         return { booking, manageUrl };
     }
@@ -151,6 +155,7 @@ let BookingsService = BookingsService_1 = class BookingsService {
             include: bookingWithItems,
         });
         this.calendarService.syncBookingCancelled(updated.id);
+        this.emailService.sendCancellation(updated.id);
         return updated;
     }
     async rescheduleByToken(token, dto) {
@@ -173,6 +178,7 @@ let BookingsService = BookingsService_1 = class BookingsService {
             });
         });
         this.calendarService.syncBookingRescheduled(updated.id);
+        this.emailService.sendReschedule(updated.id);
         return updated;
     }
     async findAll(query) {
@@ -237,6 +243,7 @@ let BookingsService = BookingsService_1 = class BookingsService {
         if (dto.status === client_1.BookingStatus.CANCELLED &&
             existing.status !== client_1.BookingStatus.CANCELLED) {
             this.calendarService.syncBookingCancelled(updated.id);
+            this.emailService.sendCancellation(updated.id);
         }
         return updated;
     }
@@ -252,6 +259,7 @@ exports.BookingsService = BookingsService = BookingsService_1 = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [prisma_service_1.PrismaService,
         availability_service_1.AvailabilityService,
-        calendar_service_1.CalendarService])
+        calendar_service_js_1.CalendarService,
+        email_service_1.EmailService])
 ], BookingsService);
 //# sourceMappingURL=bookings.service.js.map

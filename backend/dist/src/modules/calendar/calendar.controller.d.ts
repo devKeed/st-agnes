@@ -1,4 +1,4 @@
-import { CalendarService } from './calendar.service';
+import { CalendarService } from './calendar.service.js';
 import { UpdateCalendarIdDto } from './dto/update-calendar-id.dto';
 export declare class CalendarController {
     private readonly calendarService;

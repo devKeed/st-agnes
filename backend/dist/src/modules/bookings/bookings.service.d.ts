@@ -1,7 +1,8 @@
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AvailabilityService } from '../availability/availability.service';
-import { CalendarService } from '../calendar/calendar.service';
+import { CalendarService } from '../calendar/calendar.service.js';
+import { EmailService } from '../email/email.service';
 import { CreateBookingDto, QueryBookingsDto, RescheduleBookingDto, UpdateBookingStatusDto } from './dto';
 import type { PaginatedResponse } from '../../common/dto';
 declare const bookingWithItems: {
@@ -18,8 +19,9 @@ export declare class BookingsService {
     private readonly prisma;
     private readonly availabilityService;
     private readonly calendarService;
+    private readonly emailService;
     private readonly logger;
-    constructor(prisma: PrismaService, availabilityService: AvailabilityService, calendarService: CalendarService);
+    constructor(prisma: PrismaService, availabilityService: AvailabilityService, calendarService: CalendarService, emailService: EmailService);
     create(dto: CreateBookingDto): Promise<{
         booking: BookingWithItems;
         manageUrl: string;

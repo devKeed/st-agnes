@@ -10,6 +10,7 @@ exports.BookingsModule = void 0;
 const common_1 = require("@nestjs/common");
 const availability_module_1 = require("../availability/availability.module");
 const calendar_module_1 = require("../calendar/calendar.module");
+const email_module_1 = require("../email/email.module");
 const bookings_controller_1 = require("./bookings.controller");
 const bookings_service_1 = require("./bookings.service");
 let BookingsModule = class BookingsModule {
@@ -17,7 +18,7 @@ let BookingsModule = class BookingsModule {
 exports.BookingsModule = BookingsModule;
 exports.BookingsModule = BookingsModule = __decorate([
     (0, common_1.Module)({
-        imports: [availability_module_1.AvailabilityModule, calendar_module_1.CalendarModule],
+        imports: [availability_module_1.AvailabilityModule, calendar_module_1.CalendarModule, email_module_1.EmailModule],
         controllers: [bookings_controller_1.BookingsController],
         providers: [bookings_service_1.BookingsService],
         exports: [bookings_service_1.BookingsService],

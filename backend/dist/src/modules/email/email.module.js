@@ -6,18 +6,18 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.CalendarModule = void 0;
+exports.EmailModule = void 0;
 const common_1 = require("@nestjs/common");
-const calendar_controller_1 = require("./calendar.controller");
-const calendar_service_js_1 = require("./calendar.service.js");
-let CalendarModule = class CalendarModule {
+const email_service_1 = require("./email.service");
+const reminders_service_1 = require("./reminders.service");
+const resend_provider_1 = require("./resend.provider");
+let EmailModule = class EmailModule {
 };
-exports.CalendarModule = CalendarModule;
-exports.CalendarModule = CalendarModule = __decorate([
+exports.EmailModule = EmailModule;
+exports.EmailModule = EmailModule = __decorate([
     (0, common_1.Module)({
-        controllers: [calendar_controller_1.CalendarController],
-        providers: [calendar_service_js_1.CalendarService],
-        exports: [calendar_service_js_1.CalendarService],
+        providers: [email_service_1.EmailService, reminders_service_1.RemindersService, resend_provider_1.ResendProvider],
+        exports: [email_service_1.EmailService],
     })
-], CalendarModule);
-//# sourceMappingURL=calendar.module.js.map
+], EmailModule);
+//# sourceMappingURL=email.module.js.map

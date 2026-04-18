@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { BlockedDate, BookingStatus, BusinessHours, Prisma, ServiceType } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
-import { CalendarService } from '../calendar/calendar.service';
+import { CalendarService } from '../calendar/calendar.service.js';
 import { BlockDateDto, QueryAvailabilityDto, UpdateBusinessHoursDto } from './dto';
 
 // Nigeria is UTC+1 year-round (no DST observed).
