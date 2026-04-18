@@ -18,6 +18,8 @@ const auth_module_1 = require("./modules/auth/auth.module");
 const upload_module_1 = require("./modules/upload/upload.module");
 const rentals_module_1 = require("./modules/rentals/rentals.module");
 const gallery_module_1 = require("./modules/gallery/gallery.module");
+const content_module_1 = require("./modules/content/content.module");
+const terms_module_1 = require("./modules/terms/terms.module");
 const guards_1 = require("./common/guards");
 let AppModule = class AppModule {
 };
@@ -32,6 +34,8 @@ exports.AppModule = AppModule = __decorate([
             upload_module_1.UploadModule,
             rentals_module_1.RentalsModule,
             gallery_module_1.GalleryModule,
+            content_module_1.ContentModule,
+            terms_module_1.TermsModule,
         ],
         controllers: [app_controller_1.AppController],
         providers: [
