@@ -132,7 +132,7 @@ let CalendarService = CalendarService_1 = class CalendarService {
                 this.logger.warn('Google Calendar is not connected. Skipping event creation.');
                 return;
             }
-            const inserted = await calendar.events.insert({
+            const inserted = await calendar.client.events.insert({
                 calendarId: calendar.calendarId,
                 requestBody: this.buildBookingEventRequest(booking),
             });
@@ -162,7 +162,7 @@ let CalendarService = CalendarService_1 = class CalendarService {
                 this.logger.warn('Google Calendar is not connected. Skipping event update.');
                 return;
             }
-            await calendar.events.update({
+            await calendar.client.events.update({
                 calendarId: calendar.calendarId,
                 eventId: booking.googleEventId,
                 requestBody: this.buildBookingEventRequest(booking),
@@ -185,7 +185,7 @@ let CalendarService = CalendarService_1 = class CalendarService {
                 return;
             }
             try {
-                await calendar.events.delete({
+                await calendar.client.events.delete({
                     calendarId: calendar.calendarId,
                     eventId: booking.googleEventId,
                 });
@@ -221,7 +221,7 @@ let CalendarService = CalendarService_1 = class CalendarService {
                 this.logger.warn('Google Calendar is not connected. Skipping blocked date event creation.');
                 return;
             }
-            const inserted = await calendar.events.insert({
+            const inserted = await calendar.client.events.insert({
                 calendarId: calendar.calendarId,
                 requestBody: this.buildBlockedDateRequest(blockedDate),
             });
@@ -247,7 +247,7 @@ let CalendarService = CalendarService_1 = class CalendarService {
                 return;
             }
             try {
-                await calendar.events.delete({
+                await calendar.client.events.delete({
                     calendarId: calendar.calendarId,
                     eventId: googleEventId,
                 });
