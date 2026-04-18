@@ -22,7 +22,6 @@ const content_module_1 = require("./modules/content/content.module");
 const terms_module_1 = require("./modules/terms/terms.module");
 const availability_module_1 = require("./modules/availability/availability.module");
 const bookings_module_1 = require("./modules/bookings/bookings.module");
-const calendar_module_1 = require("./modules/calendar/calendar.module");
 const guards_1 = require("./common/guards");
 let AppModule = class AppModule {
 };
@@ -41,7 +40,6 @@ exports.AppModule = AppModule = __decorate([
             terms_module_1.TermsModule,
             availability_module_1.AvailabilityModule,
             bookings_module_1.BookingsModule,
-            calendar_module_1.CalendarModule,
         ],
         controllers: [app_controller_1.AppController],
         providers: [

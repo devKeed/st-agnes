@@ -1,6 +1,5 @@
 import { BlockedDate, BusinessHours, Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
-import { CalendarService } from '../calendar/calendar.service';
 import { BlockDateDto, QueryAvailabilityDto, UpdateBusinessHoursDto } from './dto';
 export interface TimeSlot {
     start: string;
@@ -18,8 +17,7 @@ export interface AvailabilityResponse {
 }
 export declare class AvailabilityService {
     private readonly prisma;
-    private readonly calendarService;
-    constructor(prisma: PrismaService, calendarService: CalendarService);
+    constructor(prisma: PrismaService);
     getMonthAvailability(query: QueryAvailabilityDto): Promise<AvailabilityResponse>;
     getBusinessHours(): Promise<BusinessHours[]>;
     blockDate(dto: BlockDateDto, adminId: string): Promise<BlockedDate>;

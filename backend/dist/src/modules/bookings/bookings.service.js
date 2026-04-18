@@ -9,6 +9,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 var BookingsService_1;
+var _a;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.BookingsService = void 0;
 const common_1 = require("@nestjs/common");
@@ -251,7 +252,6 @@ exports.BookingsService = BookingsService;
 exports.BookingsService = BookingsService = BookingsService_1 = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [prisma_service_1.PrismaService,
-        availability_service_1.AvailabilityService,
-        calendar_service_1.CalendarService])
+        availability_service_1.AvailabilityService, typeof (_a = typeof calendar_service_1.CalendarService !== "undefined" && calendar_service_1.CalendarService) === "function" ? _a : Object])
 ], BookingsService);
 //# sourceMappingURL=bookings.service.js.map

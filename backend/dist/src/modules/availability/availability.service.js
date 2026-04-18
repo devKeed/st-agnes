@@ -13,14 +13,11 @@ exports.AvailabilityService = void 0;
 const common_1 = require("@nestjs/common");
 const client_1 = require("@prisma/client");
 const prisma_service_1 = require("../../prisma/prisma.service");
-const calendar_service_1 = require("../calendar/calendar.service");
 const LAGOS_OFFSET_MINUTES = 60;
 let AvailabilityService = class AvailabilityService {
     prisma;
-    calendarService;
-    constructor(prisma, calendarService) {
+    constructor(prisma) {
         this.prisma = prisma;
-        this.calendarService = calendarService;
     }
     async getMonthAvailability(query) {
         const [year, month] = query.month.split('-').map(Number);
@@ -112,7 +109,7 @@ let AvailabilityService = class AvailabilityService {
             throw new common_1.BadRequestException('Both startTime and endTime must be provided together for a time-range block.');
         }
         const dateParsed = this.parseDateStr(dto.date);
-        const blockedDate = await this.prisma.blockedDate.create({
+        return this.prisma.blockedDate.create({
             data: {
                 date: dateParsed,
                 startTime: dto.startTime ?? null,
@@ -121,8 +118,6 @@ let AvailabilityService = class AvailabilityService {
                 blockedById: adminId,
             },
         });
-        this.calendarService.syncBlockedDateCreated(blockedDate.id);
-        return blockedDate;
     }
     async unblockDate(id) {
         const existing = await this.prisma.blockedDate.findUnique({ where: { id } });
@@ -130,7 +125,6 @@ let AvailabilityService = class AvailabilityService {
             throw new common_1.NotFoundException(`Blocked date ${id} not found`);
         }
         await this.prisma.blockedDate.delete({ where: { id } });
-        this.calendarService.syncBlockedDateRemoved(existing.googleEventId);
         return { id };
     }
     async updateBusinessHours(dto) {
@@ -216,7 +210,6 @@ let AvailabilityService = class AvailabilityService {
 exports.AvailabilityService = AvailabilityService;
 exports.AvailabilityService = AvailabilityService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService,
-        calendar_service_1.CalendarService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService])
 ], AvailabilityService);
 //# sourceMappingURL=availability.service.js.map

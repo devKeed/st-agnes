@@ -17,8 +17,8 @@ export declare class AvailabilityController {
         date: Date;
         startTime: string | null;
         endTime: string | null;
-        googleEventId: string | null;
         reason: string | null;
+        googleEventId: string | null;
         blockedById: string | null;
     }>;
     unblock(id: string): Promise<{
