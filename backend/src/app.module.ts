@@ -11,6 +11,8 @@ import { RentalsModule } from './modules/rentals/rentals.module';
 import { GalleryModule } from './modules/gallery/gallery.module';
 import { ContentModule } from './modules/content/content.module';
 import { TermsModule } from './modules/terms/terms.module';
+import { AvailabilityModule } from './modules/availability/availability.module';
+import { BookingsModule } from './modules/bookings/bookings.module';
 import { JwtAuthGuard, RolesGuard } from './common/guards';
 
 @Module({
@@ -24,6 +26,8 @@ import { JwtAuthGuard, RolesGuard } from './common/guards';
     GalleryModule,
     ContentModule,
     TermsModule,
+    AvailabilityModule,
+    BookingsModule,
   ],
   controllers: [AppController],
   providers: [

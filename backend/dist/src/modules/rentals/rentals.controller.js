@@ -24,25 +24,25 @@ let RentalsController = class RentalsController {
     constructor(rentalsService) {
         this.rentalsService = rentalsService;
     }
-    async listPublic(query) {
+    listPublic(query) {
         return this.rentalsService.findAll(query, { isAdmin: false });
     }
-    async getPublic(id) {
-        return this.rentalsService.findOne(id, { isAdmin: false });
-    }
-    async listAdmin(query, _role) {
+    listAdmin(query, _role) {
         return this.rentalsService.findAll(query, { isAdmin: true });
     }
-    async getAdmin(id) {
-        return this.rentalsService.findOne(id, { isAdmin: true });
-    }
-    async create(dto) {
+    create(dto) {
         return this.rentalsService.create(dto);
     }
-    async update(id, dto) {
+    getPublic(id) {
+        return this.rentalsService.findOne(id, { isAdmin: false });
+    }
+    getAdmin(id) {
+        return this.rentalsService.findOne(id, { isAdmin: true });
+    }
+    update(id, dto) {
         return this.rentalsService.update(id, dto);
     }
-    async remove(id) {
+    remove(id) {
         return this.rentalsService.remove(id);
     }
 };
@@ -54,17 +54,8 @@ __decorate([
     __param(0, (0, common_1.Query)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [dto_1.QueryRentalsDto]),
-    __metadata("design:returntype", Promise)
+    __metadata("design:returntype", void 0)
 ], RentalsController.prototype, "listPublic", null);
-__decorate([
-    (0, decorators_1.Public)(),
-    (0, common_1.Get)(':id'),
-    (0, swagger_1.ApiOperation)({ summary: 'Get a single rental by id (public)' }),
-    __param(0, (0, common_1.Param)('id', new common_1.ParseUUIDPipe())),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", Promise)
-], RentalsController.prototype, "getPublic", null);
 __decorate([
     (0, common_1.Get)('admin/list'),
     (0, decorators_1.Roles)(client_1.AdminRole.SUPER_ADMIN, client_1.AdminRole.ADMIN),
@@ -76,18 +67,8 @@ __decorate([
     __param(1, (0, decorators_1.CurrentUser)('role')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [dto_1.QueryRentalsDto, String]),
-    __metadata("design:returntype", Promise)
+    __metadata("design:returntype", void 0)
 ], RentalsController.prototype, "listAdmin", null);
-__decorate([
-    (0, common_1.Get)('admin/:id'),
-    (0, decorators_1.Roles)(client_1.AdminRole.SUPER_ADMIN, client_1.AdminRole.ADMIN),
-    (0, swagger_1.ApiBearerAuth)(),
-    (0, swagger_1.ApiOperation)({ summary: 'Admin detail — bypasses visibility checks.' }),
-    __param(0, (0, common_1.Param)('id', new common_1.ParseUUIDPipe())),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", Promise)
-], RentalsController.prototype, "getAdmin", null);
 __decorate([
     (0, common_1.Post)(),
     (0, decorators_1.Roles)(client_1.AdminRole.SUPER_ADMIN, client_1.AdminRole.ADMIN),
@@ -96,8 +77,27 @@ __decorate([
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [dto_1.CreateRentalDto]),
-    __metadata("design:returntype", Promise)
+    __metadata("design:returntype", void 0)
 ], RentalsController.prototype, "create", null);
+__decorate([
+    (0, decorators_1.Public)(),
+    (0, common_1.Get)(':id'),
+    (0, swagger_1.ApiOperation)({ summary: 'Get a single rental by id (public)' }),
+    __param(0, (0, common_1.Param)('id', new common_1.ParseUUIDPipe())),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], RentalsController.prototype, "getPublic", null);
+__decorate([
+    (0, common_1.Get)('admin/:id'),
+    (0, decorators_1.Roles)(client_1.AdminRole.SUPER_ADMIN, client_1.AdminRole.ADMIN),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, swagger_1.ApiOperation)({ summary: 'Admin detail — bypasses visibility checks.' }),
+    __param(0, (0, common_1.Param)('id', new common_1.ParseUUIDPipe())),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], RentalsController.prototype, "getAdmin", null);
 __decorate([
     (0, common_1.Put)(':id'),
     (0, decorators_1.Roles)(client_1.AdminRole.SUPER_ADMIN, client_1.AdminRole.ADMIN),
@@ -107,7 +107,7 @@ __decorate([
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, dto_1.UpdateRentalDto]),
-    __metadata("design:returntype", Promise)
+    __metadata("design:returntype", void 0)
 ], RentalsController.prototype, "update", null);
 __decorate([
     (0, common_1.Delete)(':id'),
@@ -120,7 +120,7 @@ __decorate([
     __param(0, (0, common_1.Param)('id', new common_1.ParseUUIDPipe())),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", Promise)
+    __metadata("design:returntype", void 0)
 ], RentalsController.prototype, "remove", null);
 exports.RentalsController = RentalsController = __decorate([
     (0, swagger_1.ApiTags)('Rentals'),

@@ -24,25 +24,25 @@ let GalleryController = class GalleryController {
     constructor(galleryService) {
         this.galleryService = galleryService;
     }
-    async listPublic(query) {
+    listPublic(query) {
         return this.galleryService.findAll(query, { isAdmin: false });
     }
-    async getPublic(id) {
-        return this.galleryService.findOne(id, { isAdmin: false });
-    }
-    async listAdmin(query) {
+    listAdmin(query) {
         return this.galleryService.findAll(query, { isAdmin: true });
     }
-    async create(dto) {
+    create(dto) {
         return this.galleryService.create(dto);
     }
-    async reorder(dto) {
+    reorder(dto) {
         return this.galleryService.reorder(dto);
     }
-    async update(id, dto) {
+    getPublic(id) {
+        return this.galleryService.findOne(id, { isAdmin: false });
+    }
+    update(id, dto) {
         return this.galleryService.update(id, dto);
     }
-    async remove(id) {
+    remove(id) {
         return this.galleryService.remove(id);
     }
 };
@@ -56,17 +56,8 @@ __decorate([
     __param(0, (0, common_1.Query)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [dto_1.QueryGalleryDto]),
-    __metadata("design:returntype", Promise)
+    __metadata("design:returntype", void 0)
 ], GalleryController.prototype, "listPublic", null);
-__decorate([
-    (0, decorators_1.Public)(),
-    (0, common_1.Get)(':id'),
-    (0, swagger_1.ApiOperation)({ summary: 'Get a single gallery item by id (public)' }),
-    __param(0, (0, common_1.Param)('id', new common_1.ParseUUIDPipe())),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", Promise)
-], GalleryController.prototype, "getPublic", null);
 __decorate([
     (0, common_1.Get)('admin/list'),
     (0, decorators_1.Roles)(client_1.AdminRole.SUPER_ADMIN, client_1.AdminRole.ADMIN),
@@ -77,7 +68,7 @@ __decorate([
     __param(0, (0, common_1.Query)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [dto_1.QueryGalleryDto]),
-    __metadata("design:returntype", Promise)
+    __metadata("design:returntype", void 0)
 ], GalleryController.prototype, "listAdmin", null);
 __decorate([
     (0, common_1.Post)(),
@@ -87,7 +78,7 @@ __decorate([
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [dto_1.CreateGalleryDto]),
-    __metadata("design:returntype", Promise)
+    __metadata("design:returntype", void 0)
 ], GalleryController.prototype, "create", null);
 __decorate([
     (0, common_1.Patch)('reorder'),
@@ -100,8 +91,17 @@ __decorate([
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [dto_1.ReorderGalleryDto]),
-    __metadata("design:returntype", Promise)
+    __metadata("design:returntype", void 0)
 ], GalleryController.prototype, "reorder", null);
+__decorate([
+    (0, decorators_1.Public)(),
+    (0, common_1.Get)(':id'),
+    (0, swagger_1.ApiOperation)({ summary: 'Get a single gallery item by id (public)' }),
+    __param(0, (0, common_1.Param)('id', new common_1.ParseUUIDPipe())),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], GalleryController.prototype, "getPublic", null);
 __decorate([
     (0, common_1.Put)(':id'),
     (0, decorators_1.Roles)(client_1.AdminRole.SUPER_ADMIN, client_1.AdminRole.ADMIN),
@@ -111,7 +111,7 @@ __decorate([
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, dto_1.UpdateGalleryDto]),
-    __metadata("design:returntype", Promise)
+    __metadata("design:returntype", void 0)
 ], GalleryController.prototype, "update", null);
 __decorate([
     (0, common_1.Delete)(':id'),
@@ -124,7 +124,7 @@ __decorate([
     __param(0, (0, common_1.Param)('id', new common_1.ParseUUIDPipe())),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", Promise)
+    __metadata("design:returntype", void 0)
 ], GalleryController.prototype, "remove", null);
 exports.GalleryController = GalleryController = __decorate([
     (0, swagger_1.ApiTags)('Gallery'),

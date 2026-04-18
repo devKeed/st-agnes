@@ -15,18 +15,6 @@ export declare class GalleryController {
         imageUrl: string;
         imagePublicId: string | null;
     }[]>;
-    getPublic(id: string): Promise<{
-        id: string;
-        createdAt: Date;
-        updatedAt: Date;
-        description: string | null;
-        title: string;
-        isVisible: boolean;
-        sortOrder: number;
-        category: import("@prisma/client").$Enums.GalleryCategory;
-        imageUrl: string;
-        imagePublicId: string | null;
-    }>;
     listAdmin(query: QueryGalleryDto): Promise<{
         id: string;
         createdAt: Date;
@@ -53,6 +41,18 @@ export declare class GalleryController {
     }>;
     reorder(dto: ReorderGalleryDto): Promise<{
         updated: number;
+    }>;
+    getPublic(id: string): Promise<{
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        description: string | null;
+        title: string;
+        isVisible: boolean;
+        sortOrder: number;
+        category: import("@prisma/client").$Enums.GalleryCategory;
+        imageUrl: string;
+        imagePublicId: string | null;
     }>;
     update(id: string, dto: UpdateGalleryDto): Promise<{
         id: string;

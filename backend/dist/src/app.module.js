@@ -20,6 +20,8 @@ const rentals_module_1 = require("./modules/rentals/rentals.module");
 const gallery_module_1 = require("./modules/gallery/gallery.module");
 const content_module_1 = require("./modules/content/content.module");
 const terms_module_1 = require("./modules/terms/terms.module");
+const availability_module_1 = require("./modules/availability/availability.module");
+const bookings_module_1 = require("./modules/bookings/bookings.module");
 const guards_1 = require("./common/guards");
 let AppModule = class AppModule {
 };
@@ -36,6 +38,8 @@ exports.AppModule = AppModule = __decorate([
             gallery_module_1.GalleryModule,
             content_module_1.ContentModule,
             terms_module_1.TermsModule,
+            availability_module_1.AvailabilityModule,
+            bookings_module_1.BookingsModule,
         ],
         controllers: [app_controller_1.AppController],
         providers: [

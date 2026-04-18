@@ -28,30 +28,24 @@ import {
 export class GalleryController {
   constructor(private readonly galleryService: GalleryService) {}
 
+  // ─── Static routes first (must precede :id wildcard) ─────────────────────────
+
   @Public()
   @Get()
   @ApiOperation({
     summary: 'List visible gallery items, optionally filtered by category (public)',
   })
-  async listPublic(@Query() query: QueryGalleryDto) {
+  listPublic(@Query() query: QueryGalleryDto) {
     return this.galleryService.findAll(query, { isAdmin: false });
-  }
-
-  @Public()
-  @Get(':id')
-  @ApiOperation({ summary: 'Get a single gallery item by id (public)' })
-  async getPublic(@Param('id', new ParseUUIDPipe()) id: string) {
-    return this.galleryService.findOne(id, { isAdmin: false });
   }
 
   @Get('admin/list')
   @Roles(AdminRole.SUPER_ADMIN, AdminRole.ADMIN)
   @ApiBearerAuth()
   @ApiOperation({
-    summary:
-      'Admin list — supports includeHidden=true to surface hidden items.',
+    summary: 'Admin list — supports includeHidden=true to surface hidden items.',
   })
-  async listAdmin(@Query() query: QueryGalleryDto) {
+  listAdmin(@Query() query: QueryGalleryDto) {
     return this.galleryService.findAll(query, { isAdmin: true });
   }
 
@@ -59,7 +53,7 @@ export class GalleryController {
   @Roles(AdminRole.SUPER_ADMIN, AdminRole.ADMIN)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Create gallery item (admin)' })
-  async create(@Body() dto: CreateGalleryDto) {
+  create(@Body() dto: CreateGalleryDto) {
     return this.galleryService.create(dto);
   }
 
@@ -68,18 +62,26 @@ export class GalleryController {
   @Roles(AdminRole.SUPER_ADMIN, AdminRole.ADMIN)
   @ApiBearerAuth()
   @ApiOperation({
-    summary:
-      'Bulk-update sort order (admin). All ids must exist; duplicates rejected.',
+    summary: 'Bulk-update sort order (admin). All ids must exist; duplicates rejected.',
   })
-  async reorder(@Body() dto: ReorderGalleryDto) {
+  reorder(@Body() dto: ReorderGalleryDto) {
     return this.galleryService.reorder(dto);
+  }
+
+  // ─── Wildcard :id routes last ────────────────────────────────────────────────
+
+  @Public()
+  @Get(':id')
+  @ApiOperation({ summary: 'Get a single gallery item by id (public)' })
+  getPublic(@Param('id', new ParseUUIDPipe()) id: string) {
+    return this.galleryService.findOne(id, { isAdmin: false });
   }
 
   @Put(':id')
   @Roles(AdminRole.SUPER_ADMIN, AdminRole.ADMIN)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update gallery item (admin)' })
-  async update(
+  update(
     @Param('id', new ParseUUIDPipe()) id: string,
     @Body() dto: UpdateGalleryDto,
   ) {
@@ -91,10 +93,9 @@ export class GalleryController {
   @Roles(AdminRole.SUPER_ADMIN, AdminRole.ADMIN)
   @ApiBearerAuth()
   @ApiOperation({
-    summary:
-      'Delete gallery item (admin) — also removes the Cloudinary asset best-effort.',
+    summary: 'Delete gallery item (admin) — also removes the Cloudinary asset best-effort.',
   })
-  async remove(@Param('id', new ParseUUIDPipe()) id: string) {
+  remove(@Param('id', new ParseUUIDPipe()) id: string) {
     return this.galleryService.remove(id);
   }
 }

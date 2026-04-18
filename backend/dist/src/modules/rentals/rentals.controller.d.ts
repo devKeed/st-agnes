@@ -19,21 +19,6 @@ export declare class RentalsController {
         isVisible: boolean;
         sortOrder: number;
     }>>;
-    getPublic(id: string): Promise<{
-        id: string;
-        name: string;
-        createdAt: Date;
-        updatedAt: Date;
-        description: string | null;
-        sizes: string[];
-        pricePerDay: import("@prisma/client-runtime-utils").Decimal;
-        depositAmount: import("@prisma/client-runtime-utils").Decimal;
-        imageUrls: string[];
-        imagePublicIds: string[];
-        status: import("@prisma/client").$Enums.RentalStatus;
-        isVisible: boolean;
-        sortOrder: number;
-    }>;
     listAdmin(query: QueryRentalsDto, _role: AdminRole): Promise<import("../../common/dto").PaginatedResponse<{
         id: string;
         name: string;
@@ -49,7 +34,7 @@ export declare class RentalsController {
         isVisible: boolean;
         sortOrder: number;
     }>>;
-    getAdmin(id: string): Promise<{
+    create(dto: CreateRentalDto): Promise<{
         id: string;
         name: string;
         createdAt: Date;
@@ -64,7 +49,22 @@ export declare class RentalsController {
         isVisible: boolean;
         sortOrder: number;
     }>;
-    create(dto: CreateRentalDto): Promise<{
+    getPublic(id: string): Promise<{
+        id: string;
+        name: string;
+        createdAt: Date;
+        updatedAt: Date;
+        description: string | null;
+        sizes: string[];
+        pricePerDay: import("@prisma/client-runtime-utils").Decimal;
+        depositAmount: import("@prisma/client-runtime-utils").Decimal;
+        imageUrls: string[];
+        imagePublicIds: string[];
+        status: import("@prisma/client").$Enums.RentalStatus;
+        isVisible: boolean;
+        sortOrder: number;
+    }>;
+    getAdmin(id: string): Promise<{
         id: string;
         name: string;
         createdAt: Date;
