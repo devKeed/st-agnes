@@ -5,7 +5,6 @@ import {
 } from '@nestjs/common';
 import { BlockedDate, BookingStatus, BusinessHours, Prisma, ServiceType } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
-import { CalendarService } from '../calendar/calendar.service';
 import { BlockDateDto, QueryAvailabilityDto, UpdateBusinessHoursDto } from './dto';
 
 // Nigeria is UTC+1 year-round (no DST observed).
@@ -30,10 +29,7 @@ export interface AvailabilityResponse {
 
 @Injectable()
 export class AvailabilityService {
-  constructor(
-    private readonly prisma: PrismaService,
-    private readonly calendarService: CalendarService,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   // ─── Public: slot availability ──────────────────────────────────────────────
 
@@ -167,7 +163,7 @@ export class AvailabilityService {
 
     const dateParsed = this.parseDateStr(dto.date);
 
-    const blockedDate = await this.prisma.blockedDate.create({
+    return this.prisma.blockedDate.create({
       data: {
         date: dateParsed,
         startTime: dto.startTime ?? null,
@@ -176,10 +172,6 @@ export class AvailabilityService {
         blockedById: adminId,
       },
     });
-
-    this.calendarService.syncBlockedDateCreated(blockedDate.id);
-
-    return blockedDate;
   }
 
   async unblockDate(id: string): Promise<{ id: string }> {
@@ -188,9 +180,6 @@ export class AvailabilityService {
       throw new NotFoundException(`Blocked date ${id} not found`);
     }
     await this.prisma.blockedDate.delete({ where: { id } });
-
-    this.calendarService.syncBlockedDateRemoved(existing.googleEventId);
-
     return { id };
   }
 
