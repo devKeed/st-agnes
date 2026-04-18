@@ -6,7 +6,12 @@ import {
 import { BlockedDate, BookingStatus, BusinessHours, Prisma, ServiceType } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CalendarService } from '../calendar/calendar.service.js';
-import { BlockDateDto, QueryAvailabilityDto, UpdateBusinessHoursDto } from './dto';
+import {
+  BlockDateDto,
+  QueryAvailabilityDto,
+  QueryBlockedDatesDto,
+  UpdateBusinessHoursDto,
+} from './dto';
 
 // Nigeria is UTC+1 year-round (no DST observed).
 const LAGOS_OFFSET_MINUTES = 60;
@@ -26,6 +31,16 @@ export interface AvailabilityResponse {
   timezone: string;
   available_slots: DayAvailability[];
   blocked_dates: string[];
+}
+
+export interface BlockedDateEntry {
+  id: string;
+  date: string;
+  startTime: string | null;
+  endTime: string | null;
+  reason: string | null;
+  createdAt: string;
+  blockedById: string | null;
 }
 
 @Injectable()
@@ -157,6 +172,41 @@ export class AvailabilityService {
   }
 
   // ─── Admin: blocked dates ────────────────────────────────────────────────────
+
+  async listBlockedDates(query: QueryBlockedDatesDto): Promise<BlockedDateEntry[]> {
+    let where: Prisma.BlockedDateWhereInput = {};
+
+    if (query.month) {
+      const [year, month] = query.month.split('-').map(Number);
+      const monthStart = new Date(Date.UTC(year, month - 1, 1));
+      const monthEnd = new Date(Date.UTC(year, month, 1));
+      where = {
+        date: {
+          gte: monthStart,
+          lt: monthEnd,
+        },
+      };
+    }
+
+    const data = await this.prisma.blockedDate.findMany({
+      where,
+      orderBy: [{ date: 'asc' }, { startTime: 'asc' }, { createdAt: 'desc' }],
+    });
+
+    const monthPrefix = query.month ? `${query.month}-` : null;
+
+    return data
+      .filter((item) => (monthPrefix ? this.toLagosDateStr(item.date).startsWith(monthPrefix) : true))
+      .map((item) => ({
+        id: item.id,
+        date: this.toLagosDateStr(item.date),
+        startTime: item.startTime,
+        endTime: item.endTime,
+        reason: item.reason,
+        createdAt: item.createdAt.toISOString(),
+        blockedById: item.blockedById,
+      }));
+  }
 
   async blockDate(dto: BlockDateDto, adminId: string): Promise<BlockedDate> {
     if ((dto.startTime && !dto.endTime) || (!dto.startTime && dto.endTime)) {

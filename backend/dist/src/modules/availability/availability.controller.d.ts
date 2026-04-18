@@ -1,5 +1,5 @@
 import { AvailabilityService } from './availability.service';
-import { BlockDateDto, QueryAvailabilityDto, UpdateBusinessHoursDto } from './dto';
+import { BlockDateDto, QueryAvailabilityDto, QueryBlockedDatesDto, UpdateBusinessHoursDto } from './dto';
 export declare class AvailabilityController {
     private readonly availabilityService;
     constructor(availabilityService: AvailabilityService);
@@ -21,6 +21,7 @@ export declare class AvailabilityController {
         reason: string | null;
         blockedById: string | null;
     }>;
+    listBlocked(query: QueryBlockedDatesDto): Promise<import("./availability.service").BlockedDateEntry[]>;
     unblock(id: string): Promise<{
         id: string;
     }>;

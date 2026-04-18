@@ -107,6 +107,36 @@ let AvailabilityService = class AvailabilityService {
     getBusinessHours() {
         return this.prisma.businessHours.findMany({ orderBy: { dayOfWeek: 'asc' } });
     }
+    async listBlockedDates(query) {
+        let where = {};
+        if (query.month) {
+            const [year, month] = query.month.split('-').map(Number);
+            const monthStart = new Date(Date.UTC(year, month - 1, 1));
+            const monthEnd = new Date(Date.UTC(year, month, 1));
+            where = {
+                date: {
+                    gte: monthStart,
+                    lt: monthEnd,
+                },
+            };
+        }
+        const data = await this.prisma.blockedDate.findMany({
+            where,
+            orderBy: [{ date: 'asc' }, { startTime: 'asc' }, { createdAt: 'desc' }],
+        });
+        const monthPrefix = query.month ? `${query.month}-` : null;
+        return data
+            .filter((item) => (monthPrefix ? this.toLagosDateStr(item.date).startsWith(monthPrefix) : true))
+            .map((item) => ({
+            id: item.id,
+            date: this.toLagosDateStr(item.date),
+            startTime: item.startTime,
+            endTime: item.endTime,
+            reason: item.reason,
+            createdAt: item.createdAt.toISOString(),
+            blockedById: item.blockedById,
+        }));
+    }
     async blockDate(dto, adminId) {
         if ((dto.startTime && !dto.endTime) || (!dto.startTime && dto.endTime)) {
             throw new common_1.BadRequestException('Both startTime and endTime must be provided together for a time-range block.');

@@ -29,6 +29,16 @@ interface AvailabilityResponse {
   blocked_dates: string[];
 }
 
+interface BlockedDateEntry {
+  id: string;
+  date: string;
+  startTime: string | null;
+  endTime: string | null;
+  reason: string | null;
+  createdAt: string;
+  blockedById: string | null;
+}
+
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const SERVICES: ServiceType[] = ['CUSTOM_DESIGN', 'ALTERATION', 'RENTAL'];
 
@@ -75,6 +85,12 @@ export default function AdminAvailabilityPage() {
       ),
   });
 
+  const blockedEntriesQuery = useQuery({
+    queryKey: ['availability', 'blocked', month],
+    queryFn: () =>
+      apiFetch<BlockedDateEntry[]>(`/availability/blocked?month=${encodeURIComponent(month)}`),
+  });
+
   const saveHoursMutation = useMutation({
     mutationFn: () =>
       apiFetch<BusinessHours[]>('/availability/business-hours', {
@@ -114,6 +130,20 @@ export default function AdminAvailabilityPage() {
       setBlockEnd('');
       setBlockReason('');
       void queryClient.invalidateQueries({ queryKey: ['availability', 'month'] });
+      void queryClient.invalidateQueries({ queryKey: ['availability', 'blocked'] });
+    },
+    onError: (error) => setFeedback(errorMessage(error)),
+  });
+
+  const unblockMutation = useMutation({
+    mutationFn: (id: string) =>
+      apiFetch<{ id: string }>(`/availability/block/${id}`, {
+        method: 'DELETE',
+      }),
+    onSuccess: () => {
+      setFeedback('Blocked entry removed.');
+      void queryClient.invalidateQueries({ queryKey: ['availability', 'month'] });
+      void queryClient.invalidateQueries({ queryKey: ['availability', 'blocked'] });
     },
     onError: (error) => setFeedback(errorMessage(error)),
   });
@@ -276,6 +306,55 @@ export default function AdminAvailabilityPage() {
                 ))}
               </div>
             </>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Blocked entries</CardTitle>
+          <CardDescription>
+            Full-day and partial-day blocks for the selected month.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {blockedEntriesQuery.isError ? (
+            <p className="text-sm text-destructive">{errorMessage(blockedEntriesQuery.error)}</p>
+          ) : blockedEntriesQuery.isLoading ? (
+            <p className="text-sm text-muted-foreground">Loading blocked entries…</p>
+          ) : (blockedEntriesQuery.data?.length ?? 0) === 0 ? (
+            <p className="text-sm text-muted-foreground">No blocked entries for this month.</p>
+          ) : (
+            <div className="space-y-2">
+              {blockedEntriesQuery.data?.map((entry) => {
+                const isRemoving =
+                  unblockMutation.isPending && unblockMutation.variables === entry.id;
+                return (
+                  <div
+                    key={entry.id}
+                    className="flex flex-wrap items-center justify-between gap-2 rounded-md border p-3 text-sm"
+                  >
+                    <div>
+                      <p className="font-medium">{entry.date}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {entry.startTime && entry.endTime
+                          ? `${entry.startTime}–${entry.endTime}`
+                          : 'Full day'}
+                        {entry.reason ? ` · ${entry.reason}` : ''}
+                      </p>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={isRemoving}
+                      onClick={() => unblockMutation.mutate(entry.id)}
+                    >
+                      {isRemoving ? 'Removing…' : 'Unblock'}
+                    </Button>
+                  </div>
+                );
+              })}
+            </div>
           )}
         </CardContent>
       </Card>

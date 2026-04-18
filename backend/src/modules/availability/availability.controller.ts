@@ -15,7 +15,12 @@ import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AdminRole } from '@prisma/client';
 import { CurrentUser, Public, Roles } from '../../common/decorators';
 import { AvailabilityService } from './availability.service';
-import { BlockDateDto, QueryAvailabilityDto, UpdateBusinessHoursDto } from './dto';
+import {
+  BlockDateDto,
+  QueryAvailabilityDto,
+  QueryBlockedDatesDto,
+  UpdateBusinessHoursDto,
+} from './dto';
 
 @ApiTags('Availability')
 @Controller('availability')
@@ -48,6 +53,17 @@ export class AvailabilityController {
   })
   block(@Body() dto: BlockDateDto, @CurrentUser('id') adminId: string) {
     return this.availabilityService.blockDate(dto, adminId);
+  }
+
+  @Get('blocked')
+  @Roles(AdminRole.SUPER_ADMIN, AdminRole.ADMIN)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary:
+      'List blocked date/time entries (admin). Pass optional ?month=YYYY-MM to filter by month.',
+  })
+  listBlocked(@Query() query: QueryBlockedDatesDto) {
+    return this.availabilityService.listBlockedDates(query);
   }
 
   @Delete('block/:id')

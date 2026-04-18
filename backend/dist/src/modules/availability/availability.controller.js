@@ -33,6 +33,9 @@ let AvailabilityController = class AvailabilityController {
     block(dto, adminId) {
         return this.availabilityService.blockDate(dto, adminId);
     }
+    listBlocked(query) {
+        return this.availabilityService.listBlockedDates(query);
+    }
     unblock(id) {
         return this.availabilityService.unblockDate(id);
     }
@@ -73,6 +76,18 @@ __decorate([
     __metadata("design:paramtypes", [dto_1.BlockDateDto, String]),
     __metadata("design:returntype", void 0)
 ], AvailabilityController.prototype, "block", null);
+__decorate([
+    (0, common_1.Get)('blocked'),
+    (0, decorators_1.Roles)(client_1.AdminRole.SUPER_ADMIN, client_1.AdminRole.ADMIN),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, swagger_1.ApiOperation)({
+        summary: 'List blocked date/time entries (admin). Pass optional ?month=YYYY-MM to filter by month.',
+    }),
+    __param(0, (0, common_1.Query)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [dto_1.QueryBlockedDatesDto]),
+    __metadata("design:returntype", void 0)
+], AvailabilityController.prototype, "listBlocked", null);
 __decorate([
     (0, common_1.Delete)('block/:id'),
     (0, common_1.HttpCode)(common_1.HttpStatus.OK),

@@ -1,4 +1,5 @@
 export { QueryAvailabilityDto } from './query-availability.dto';
+export { QueryBlockedDatesDto } from './query-blocked-dates.dto';
 export { BlockDateDto } from './block-date.dto';
 export {
   UpdateBusinessHoursDto,
