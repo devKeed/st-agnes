@@ -9,6 +9,8 @@ import { AuthModule } from './modules/auth/auth.module';
 import { UploadModule } from './modules/upload/upload.module';
 import { RentalsModule } from './modules/rentals/rentals.module';
 import { GalleryModule } from './modules/gallery/gallery.module';
+import { ContentModule } from './modules/content/content.module';
+import { TermsModule } from './modules/terms/terms.module';
 import { JwtAuthGuard, RolesGuard } from './common/guards';
 
 @Module({
@@ -20,6 +22,8 @@ import { JwtAuthGuard, RolesGuard } from './common/guards';
     UploadModule,
     RentalsModule,
     GalleryModule,
+    ContentModule,
+    TermsModule,
   ],
   controllers: [AppController],
   providers: [
