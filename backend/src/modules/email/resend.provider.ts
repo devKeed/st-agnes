@@ -3,7 +3,7 @@ import { Resend } from 'resend';
 
 export const RESEND = Symbol('RESEND');
 
-export type ResendClient = Resend;
+export type ResendClient = Resend | null;
 
 export const ResendProvider: Provider<ResendClient> = {
   provide: RESEND,
@@ -15,8 +15,9 @@ export const ResendProvider: Provider<ResendClient> = {
       logger.warn(
         'RESEND_API_KEY is not set. Outbound email will be logged as FAILED until configured.',
       );
+      return null;
     }
 
-    return new Resend(apiKey ?? 'missing-api-key');
+    return new Resend(apiKey);
   },
 };

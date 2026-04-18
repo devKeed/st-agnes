@@ -77,6 +77,10 @@ export class EmailService {
       process.env.EMAIL_FROM ?? 'St Agnes <bookings@stagnes.com>';
 
     try {
+      if (!this.resend) {
+        throw new Error('RESEND_API_KEY is not configured');
+      }
+
       const { error } = await this.resend.emails.send({
         from,
         to: [booking.clientEmail],

@@ -11,8 +11,9 @@ exports.ResendProvider = {
         const apiKey = process.env.RESEND_API_KEY;
         if (!apiKey) {
             logger.warn('RESEND_API_KEY is not set. Outbound email will be logged as FAILED until configured.');
+            return null;
         }
-        return new resend_1.Resend(apiKey ?? 'missing-api-key');
+        return new resend_1.Resend(apiKey);
     },
 };
 //# sourceMappingURL=resend.provider.js.map
