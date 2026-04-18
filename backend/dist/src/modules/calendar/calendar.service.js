@@ -403,13 +403,17 @@ let CalendarService = CalendarService_1 = class CalendarService {
         return process.env.TIMEZONE || 'Africa/Lagos';
     }
     signState(adminId) {
-        const secret = process.env.JWT_SECRET || 'calendar-state-secret';
+        const secret = process.env.GOOGLE_OAUTH_STATE_SECRET ||
+            process.env.JWT_SECRET ||
+            'calendar-state-secret';
         const payload = `${adminId}:${Date.now()}:${crypto.randomUUID()}`;
         const signature = crypto.createHmac('sha256', secret).update(payload).digest('hex');
         return `${Buffer.from(payload, 'utf8').toString('base64url')}.${Buffer.from(signature, 'utf8').toString('base64url')}`;
     }
     verifyState(state) {
-        const secret = process.env.JWT_SECRET || 'calendar-state-secret';
+        const secret = process.env.GOOGLE_OAUTH_STATE_SECRET ||
+            process.env.JWT_SECRET ||
+            'calendar-state-secret';
         const [payloadB64, signatureB64] = state.split('.');
         if (!payloadB64 || !signatureB64) {
             throw new common_1.BadRequestException('Invalid OAuth state.');

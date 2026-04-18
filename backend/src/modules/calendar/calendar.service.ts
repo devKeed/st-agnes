@@ -477,7 +477,10 @@ export class CalendarService {
   }
 
   private signState(adminId: string): string {
-    const secret = process.env.JWT_SECRET || 'calendar-state-secret';
+    const secret =
+      process.env.GOOGLE_OAUTH_STATE_SECRET ||
+      process.env.JWT_SECRET ||
+      'calendar-state-secret';
     const payload = `${adminId}:${Date.now()}:${crypto.randomUUID()}`;
     const signature = crypto.createHmac('sha256', secret).update(payload).digest('hex');
 
@@ -485,7 +488,10 @@ export class CalendarService {
   }
 
   private verifyState(state: string): void {
-    const secret = process.env.JWT_SECRET || 'calendar-state-secret';
+    const secret =
+      process.env.GOOGLE_OAUTH_STATE_SECRET ||
+      process.env.JWT_SECRET ||
+      'calendar-state-secret';
     const [payloadB64, signatureB64] = state.split('.');
     if (!payloadB64 || !signatureB64) {
       throw new BadRequestException('Invalid OAuth state.');
