@@ -40,6 +40,12 @@ From workspace root:
 npm run dev
 ```
 
+If you hit port-in-use errors on `3000` or `3001`:
+
+```bash
+npm run dev:reset
+```
+
 - Backend: `http://localhost:3001/api`
 - Frontend: `http://localhost:3000`
 - Swagger: `http://localhost:3001/api/docs`
