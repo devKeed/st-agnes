@@ -1,5 +1,0 @@
-import { BookingStatus } from '@prisma/client';
-export declare class UpdateBookingStatusDto {
-    status: BookingStatus;
-    cancellationReason?: string;
-}

@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/lib/auth';
 import { ApiError, apiFetch } from '@/lib/api';
@@ -28,6 +28,27 @@ interface TermsVersion {
   createdAt: string;
 }
 
+interface CalendarStatus {
+  connected: boolean;
+  calendarId: string | null;
+  tokenExpiry: string | null;
+  hasRefreshToken: boolean;
+}
+
+interface CalendarAuthUrlResponse {
+  url: string;
+}
+
+interface CalendarUpdateIdResponse {
+  success: boolean;
+  calendarId: string;
+  message: string;
+}
+
+interface CalendarDisconnectResponse {
+  success: boolean;
+}
+
 function errorMessage(error: unknown): string {
   if (error instanceof ApiError) return error.message;
   if (error instanceof Error) return error.message;
@@ -49,6 +70,7 @@ export default function AdminSettingsPage() {
   const [termsVersionLabel, setTermsVersionLabel] = useState('');
   const [termsContent, setTermsContent] = useState('');
   const [termsActivate, setTermsActivate] = useState(false);
+  const [calendarIdInput, setCalendarIdInput] = useState('');
 
   const termsQuery = useQuery({
     queryKey: ['terms', 'admin'],
@@ -60,6 +82,22 @@ export default function AdminSettingsPage() {
     queryFn: () => apiFetch<AdminUserItem[]>('/auth/admins'),
     enabled: isSuperAdmin,
   });
+
+  const calendarStatusQuery = useQuery({
+    queryKey: ['calendar', 'status'],
+    queryFn: () => apiFetch<CalendarStatus>('/calendar/status'),
+    enabled: Boolean(user),
+  });
+
+  useEffect(() => {
+    if (calendarStatusQuery.data?.calendarId) {
+      setCalendarIdInput(calendarStatusQuery.data.calendarId);
+      return;
+    }
+    if (calendarStatusQuery.data && !calendarStatusQuery.data.connected) {
+      setCalendarIdInput('primary');
+    }
+  }, [calendarStatusQuery.data]);
 
   const createAdminMutation = useMutation({
     mutationFn: () =>
@@ -127,6 +165,40 @@ export default function AdminSettingsPage() {
     onError: (error) => setFeedback(errorMessage(error)),
   });
 
+  const connectCalendarMutation = useMutation({
+    mutationFn: () => apiFetch<CalendarAuthUrlResponse>('/calendar/auth-url'),
+    onSuccess: (data) => {
+      setFeedback('Opening Google consent screen…');
+      window.open(data.url, '_blank', 'noopener,noreferrer');
+    },
+    onError: (error) => setFeedback(errorMessage(error)),
+  });
+
+  const updateCalendarIdMutation = useMutation({
+    mutationFn: () =>
+      apiFetch<CalendarUpdateIdResponse>('/calendar/calendar-id', {
+        method: 'PATCH',
+        body: { calendarId: calendarIdInput },
+      }),
+    onSuccess: (res) => {
+      setFeedback(res.message);
+      void queryClient.invalidateQueries({ queryKey: ['calendar'] });
+    },
+    onError: (error) => setFeedback(errorMessage(error)),
+  });
+
+  const disconnectCalendarMutation = useMutation({
+    mutationFn: () =>
+      apiFetch<CalendarDisconnectResponse>('/calendar/disconnect', {
+        method: 'POST',
+      }),
+    onSuccess: () => {
+      setFeedback('Google Calendar disconnected.');
+      void queryClient.invalidateQueries({ queryKey: ['calendar'] });
+    },
+    onError: (error) => setFeedback(errorMessage(error)),
+  });
+
   function onCreateAdmin(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setFeedback(null);
@@ -145,6 +217,16 @@ export default function AdminSettingsPage() {
       return;
     }
     createTermsMutation.mutate();
+  }
+
+  function onUpdateCalendarId(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setFeedback(null);
+    if (!calendarIdInput.trim()) {
+      setFeedback('Calendar ID is required.');
+      return;
+    }
+    updateCalendarIdMutation.mutate();
   }
 
   return (
@@ -249,6 +331,87 @@ export default function AdminSettingsPage() {
                 </div>
               ))}
             </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Google Calendar</CardTitle>
+          <CardDescription>
+            Connect and manage the Google Calendar used for booking sync.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {calendarStatusQuery.isError ? (
+            <p className="text-sm text-destructive">{errorMessage(calendarStatusQuery.error)}</p>
+          ) : calendarStatusQuery.isLoading ? (
+            <p className="text-sm text-muted-foreground">Loading connection status…</p>
+          ) : (
+            <>
+              <div className="rounded-md border p-3 text-sm">
+                <p>
+                  <span className="font-medium">Status:</span>{' '}
+                  {calendarStatusQuery.data?.connected ? 'Connected' : 'Not connected'}
+                </p>
+                <p>
+                  <span className="font-medium">Calendar ID:</span>{' '}
+                  {calendarStatusQuery.data?.calendarId ?? '—'}
+                </p>
+                <p>
+                  <span className="font-medium">Refresh token:</span>{' '}
+                  {calendarStatusQuery.data?.hasRefreshToken ? 'Available' : 'Missing'}
+                </p>
+                <p>
+                  <span className="font-medium">Token expiry:</span>{' '}
+                  {calendarStatusQuery.data?.tokenExpiry
+                    ? formatLagos(calendarStatusQuery.data.tokenExpiry)
+                    : '—'}
+                </p>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  onClick={() => connectCalendarMutation.mutate()}
+                  disabled={connectCalendarMutation.isPending}
+                >
+                  {connectCalendarMutation.isPending ? 'Opening…' : 'Connect / Reconnect'}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() =>
+                    void queryClient.invalidateQueries({ queryKey: ['calendar', 'status'] })
+                  }
+                >
+                  Refresh status
+                </Button>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={() => disconnectCalendarMutation.mutate()}
+                  disabled={
+                    !calendarStatusQuery.data?.connected || disconnectCalendarMutation.isPending
+                  }
+                >
+                  {disconnectCalendarMutation.isPending ? 'Disconnecting…' : 'Disconnect'}
+                </Button>
+              </div>
+
+              <form className="space-y-2" onSubmit={onUpdateCalendarId}>
+                <div className="flex flex-col gap-2 md:flex-row">
+                  <Input
+                    placeholder='Calendar ID (e.g. "primary" or calendar email)'
+                    value={calendarIdInput}
+                    onChange={(e) => setCalendarIdInput(e.target.value)}
+                  />
+                  <Button type="submit" disabled={updateCalendarIdMutation.isPending}>
+                    {updateCalendarIdMutation.isPending ? 'Saving…' : 'Update calendar ID'}
+                  </Button>
+                </div>
+              </form>
+            </>
           )}
         </CardContent>
       </Card>

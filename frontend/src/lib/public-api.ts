@@ -51,6 +51,22 @@ export interface CreateBookingPayload {
   termsVersionId: string;
 }
 
+export interface AvailabilitySlot {
+  start: string;
+  end: string;
+}
+
+export interface AvailabilityDay {
+  date: string;
+  slots: AvailabilitySlot[];
+}
+
+export interface MonthAvailability {
+  month: string;
+  timezone: string;
+  available_slots: AvailabilityDay[];
+}
+
 async function parseResponse<T>(res: Response): Promise<T> {
   const text = await res.text();
   const json = text ? (JSON.parse(text) as unknown) : undefined;
@@ -107,6 +123,16 @@ export function getPublicRental(id: string) {
 
 export function getActiveTerms() {
   return publicGet<TermsRow>('/terms/active', 120);
+}
+
+export function getMonthAvailability(
+  month: string,
+  service?: CreateBookingPayload['serviceType'],
+) {
+  const query = service
+    ? `/availability?month=${encodeURIComponent(month)}&service=${encodeURIComponent(service)}`
+    : `/availability?month=${encodeURIComponent(month)}`;
+  return publicGet<MonthAvailability>(query, 0);
 }
 
 export function createBooking(payload: CreateBookingPayload) {
