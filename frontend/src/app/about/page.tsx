@@ -16,7 +16,7 @@ export default async function AboutPage() {
       <section className="space-y-3">
         <p className="text-xs uppercase tracking-[0.25em] text-muted-foreground">About St Agnes</p>
         <h1 className="text-3xl font-semibold md:text-4xl">
-          {content.about_heading ?? 'Craftsmanship with modern elegance.'}
+          {content.about_title ?? 'Craftsmanship with modern elegance.'}
         </h1>
         <p className="max-w-3xl text-sm text-muted-foreground md:text-base">
           {content.about_body ??

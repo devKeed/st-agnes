@@ -18,10 +18,10 @@ export default async function Home() {
         <div className="space-y-4">
           <p className="text-xs tracking-[0.28em] uppercase text-muted-foreground">St Agnes Atelier</p>
           <h1 className="text-4xl font-semibold leading-tight md:text-5xl">
-            {content.home_hero_title ?? 'Elegance in every detail.'}
+            {content.hero_title ?? 'Elegance in every detail.'}
           </h1>
           <p className="max-w-xl text-sm text-muted-foreground md:text-base">
-            {content.home_hero_subtitle ??
+            {content.hero_subtitle ??
               'Discover custom design, alterations, and curated rental pieces for life’s most memorable moments.'}
           </p>
           <div className="flex flex-wrap gap-3">

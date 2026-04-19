@@ -15,6 +15,7 @@ import {
 import { services } from '@/lib/public-data';
 
 const STEP_LABELS = ['Service', 'Date & Time', 'Details', 'Review'] as const;
+type ServiceKey = 'CUSTOM_DESIGN' | 'ALTERATION' | 'RENTAL';
 
 interface BookingWizardProps {
   rentals: RentalRow[];
@@ -23,7 +24,7 @@ interface BookingWizardProps {
 export function BookingWizard({ rentals }: BookingWizardProps) {
   const router = useRouter();
   const [step, setStep] = useState(0);
-  const [service, setService] = useState<string>(services[0].key);
+  const [service, setService] = useState<ServiceKey>(services[0].key);
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
   const [name, setName] = useState('');
@@ -37,11 +38,15 @@ export function BookingWizard({ rentals }: BookingWizardProps) {
 
   const canContinue = useMemo(() => {
     if (step === 0) return Boolean(service);
-    if (step === 1) return Boolean(date && time);
+    if (step === 1) {
+      if (!date || !time) return false;
+      if (service === 'RENTAL') return selectedRentals.length > 0;
+      return true;
+    }
     if (step === 2) return Boolean(name && email);
     if (step === 3) return termsAccepted;
     return false;
-  }, [step, service, date, time, name, email, termsAccepted]);
+  }, [step, service, date, time, selectedRentals, name, email, termsAccepted]);
 
   function toggleRental(id: string) {
     setSelectedRentals((prev) =>
@@ -61,7 +66,7 @@ export function BookingWizard({ rentals }: BookingWizardProps) {
         clientName: name,
         clientEmail: email,
         clientPhone: phone || undefined,
-        serviceType: service as CreateBookingPayload['serviceType'],
+        serviceType: service,
         startTime,
         notes: notes || undefined,
         specialRequests: notes || undefined,

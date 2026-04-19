@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   cancelBookingByToken,
@@ -37,6 +37,11 @@ export function ManageBookingClient({ token }: ManageBookingClientProps) {
       setLoading(false);
     }
   }
+
+  useEffect(() => {
+    void loadBooking();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token]);
 
   async function cancelBooking() {
     setError(null);
