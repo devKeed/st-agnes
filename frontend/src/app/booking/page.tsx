@@ -1,12 +1,15 @@
 import type { Metadata } from 'next';
 import { BookingWizard } from '@/components/booking/booking-wizard';
+import { getPublicRentals } from '@/lib/public-api';
 
 export const metadata: Metadata = {
   title: 'Booking | St Agnes',
   description: 'Book appointments with the St Agnes studio using the multi-step wizard.',
 };
 
-export default function BookingPage() {
+export default async function BookingPage() {
+  const rentals = await getPublicRentals().catch(() => ({ data: [] }));
+
   return (
     <div className="space-y-6">
       <section className="space-y-2">
@@ -15,7 +18,7 @@ export default function BookingPage() {
           Pick your service, choose your preferred date, and submit your details.
         </p>
       </section>
-      <BookingWizard />
+      <BookingWizard rentals={rentals.data} />
     </div>
   );
 }

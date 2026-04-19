@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { getPublicRentals } from '@/lib/public-api';
 import { rentalItems } from '@/lib/public-data';
 
 export const metadata: Metadata = {
@@ -7,7 +8,9 @@ export const metadata: Metadata = {
   description: 'Browse rental archive and view available pieces.',
 };
 
-export default function RentalsPage() {
+export default async function RentalsPage() {
+  const rentals = await getPublicRentals().catch(() => ({ data: rentalItems }));
+
   return (
     <div className="space-y-8">
       <section className="space-y-3">
@@ -18,12 +21,18 @@ export default function RentalsPage() {
       </section>
 
       <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {rentalItems.map((item) => (
+        {rentals.data.map((item) => (
           <article key={item.id} className="overflow-hidden rounded-xl border">
-            <img src={item.imageUrl} alt={item.name} className="h-64 w-full object-cover" />
+            <img
+              src={'imageUrl' in item ? item.imageUrl : item.imageUrls?.[0]}
+              alt={item.name}
+              className="h-64 w-full object-cover"
+            />
             <div className="space-y-2 p-4">
               <h2 className="font-medium">{item.name}</h2>
-              <p className="text-sm text-muted-foreground">₦{item.pricePerDay.toLocaleString()} / day</p>
+              <p className="text-sm text-muted-foreground">
+                ₦{Number(item.pricePerDay).toLocaleString()} / day
+              </p>
               <Link href={`/rentals/${item.id}`} className="text-sm underline-offset-4 hover:underline">
                 View details
               </Link>

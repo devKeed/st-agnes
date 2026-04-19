@@ -1,10 +1,16 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { getContentMap, getPublicGallery } from '@/lib/public-api';
 import { galleryItems, services } from '@/lib/public-data';
 
-export default function Home() {
-  const featured = galleryItems.slice(0, 3);
+export default async function Home() {
+  const [content, gallery] = await Promise.all([
+    getContentMap().catch(() => ({} as Record<string, string>)),
+    getPublicGallery().catch(() => galleryItems),
+  ]);
+
+  const featured = gallery.slice(0, 3);
 
   return (
     <div className="space-y-16 md:space-y-24">
@@ -12,10 +18,11 @@ export default function Home() {
         <div className="space-y-4">
           <p className="text-xs tracking-[0.28em] uppercase text-muted-foreground">St Agnes Atelier</p>
           <h1 className="text-4xl font-semibold leading-tight md:text-5xl">
-            Elegance in every detail.
+            {content.home_hero_title ?? 'Elegance in every detail.'}
           </h1>
           <p className="max-w-xl text-sm text-muted-foreground md:text-base">
-            Discover custom design, alterations, and curated rental pieces for life’s most memorable moments.
+            {content.home_hero_subtitle ??
+              'Discover custom design, alterations, and curated rental pieces for life’s most memorable moments.'}
           </p>
           <div className="flex flex-wrap gap-3">
             <Button asChild>

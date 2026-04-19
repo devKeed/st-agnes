@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Card, CardContent } from '@/components/ui/card';
+import { getContentMap } from '@/lib/public-api';
 import { services } from '@/lib/public-data';
 
 export const metadata: Metadata = {
@@ -7,15 +8,19 @@ export const metadata: Metadata = {
   description: 'About St Agnes services, process, and creative direction.',
 };
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  const content = await getContentMap().catch(() => ({} as Record<string, string>));
+
   return (
     <div className="space-y-8">
       <section className="space-y-3">
         <p className="text-xs uppercase tracking-[0.25em] text-muted-foreground">About St Agnes</p>
-        <h1 className="text-3xl font-semibold md:text-4xl">Craftsmanship with modern elegance.</h1>
+        <h1 className="text-3xl font-semibold md:text-4xl">
+          {content.about_heading ?? 'Craftsmanship with modern elegance.'}
+        </h1>
         <p className="max-w-3xl text-sm text-muted-foreground md:text-base">
-          St Agnes blends contemporary design language with refined tailoring. From bridal pieces and couture looks
-          to practical alterations and rental styling, each experience is personal and detail-driven.
+          {content.about_body ??
+            'St Agnes blends contemporary design language with refined tailoring. From bridal pieces and couture looks to practical alterations and rental styling, each experience is personal and detail-driven.'}
         </p>
       </section>
 

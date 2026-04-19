@@ -7,16 +7,33 @@ export const metadata: Metadata = {
   description: 'Booking confirmation and next steps.',
 };
 
-export default function BookingConfirmPage() {
+interface Props {
+  searchParams: Promise<{ manageToken?: string; manageUrl?: string }>;
+}
+
+export default async function BookingConfirmPage({ searchParams }: Props) {
+  const resolved = await searchParams;
+  const manageToken = resolved.manageToken;
+  const manageUrl = resolved.manageUrl;
+
   return (
     <div className="mx-auto max-w-2xl space-y-5 rounded-xl border p-6 text-center md:p-8">
       <p className="text-xs uppercase tracking-[0.25em] text-muted-foreground">Confirmation</p>
       <h1 className="text-3xl font-semibold">Your booking request has been received.</h1>
       <p className="text-sm text-muted-foreground md:text-base">
-        A confirmation email and manage link will be sent after validation. You can use your manage link to reschedule
-        or cancel according to studio policy.
+        Your request is now in review. Keep your manage link safe to reschedule or cancel according to studio policy.
       </p>
+      {manageToken ? (
+        <p className="rounded-md border bg-muted/30 p-3 text-left text-xs text-muted-foreground">
+          Manage token: <span className="font-mono text-foreground">{manageToken}</span>
+        </p>
+      ) : null}
       <div className="flex flex-wrap justify-center gap-3">
+        {manageUrl ? (
+          <Button asChild>
+            <Link href={manageUrl}>Manage this booking</Link>
+          </Button>
+        ) : null}
         <Button asChild>
           <Link href="/">Back home</Link>
         </Button>

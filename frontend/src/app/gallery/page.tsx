@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { getPublicGallery } from '@/lib/public-api';
 import { galleryItems } from '@/lib/public-data';
 
 export const metadata: Metadata = {
@@ -7,7 +8,9 @@ export const metadata: Metadata = {
   description: 'Browse Collection and Muse gallery categories.',
 };
 
-export default function GalleryPage() {
+export default async function GalleryPage() {
+  const items = await getPublicGallery().catch(() => galleryItems);
+
   return (
     <div className="space-y-8">
       <section className="space-y-3">
@@ -26,7 +29,7 @@ export default function GalleryPage() {
       </section>
 
       <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {galleryItems.map((item) => (
+        {items.map((item) => (
           <article key={item.id} className="overflow-hidden rounded-xl border">
             <img src={item.imageUrl} alt={item.title} className="h-64 w-full object-cover" />
             <div className="space-y-1 p-4">

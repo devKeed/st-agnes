@@ -1,13 +1,15 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
+import { getPublicGallery } from '@/lib/public-api';
 import { galleryItems, type GalleryCategory } from '@/lib/public-data';
 
 interface Props {
-  params: { category: string };
+  params: Promise<{ category: string }>;
 }
 
-export function generateMetadata({ params }: Props): Metadata {
-  const category = params.category.toLowerCase();
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const resolved = await params;
+  const category = resolved.category.toLowerCase();
   const title = category === 'collection' ? 'Collection' : category === 'muse' ? 'Muse' : 'Gallery';
 
   return {
@@ -16,14 +18,17 @@ export function generateMetadata({ params }: Props): Metadata {
   };
 }
 
-export default function GalleryCategoryPage({ params }: Props) {
-  const category = params.category.toUpperCase();
+export default async function GalleryCategoryPage({ params }: Props) {
+  const resolved = await params;
+  const category = resolved.category.toUpperCase();
   if (category !== 'COLLECTION' && category !== 'MUSE') {
     notFound();
   }
 
   const typedCategory = category as GalleryCategory;
-  const items = galleryItems.filter((item) => item.category === typedCategory);
+  const items = await getPublicGallery(typedCategory).catch(() =>
+    galleryItems.filter((item) => item.category === typedCategory),
+  );
 
   return (
     <div className="space-y-6">

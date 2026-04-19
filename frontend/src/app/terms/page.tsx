@@ -1,11 +1,23 @@
 import type { Metadata } from 'next';
+import { getActiveTerms } from '@/lib/public-api';
 
 export const metadata: Metadata = {
   title: 'Terms | St Agnes',
   description: 'Terms and conditions for St Agnes services and bookings.',
 };
 
-export default function TermsPage() {
+export default async function TermsPage() {
+  const terms = await getActiveTerms().catch(() => null);
+
+  if (terms) {
+    return (
+      <article className="prose prose-neutral max-w-3xl dark:prose-invert">
+        <h1>Terms & Conditions ({terms.versionLabel})</h1>
+        <pre className="whitespace-pre-wrap font-sans text-sm leading-6">{terms.content}</pre>
+      </article>
+    );
+  }
+
   return (
     <article className="prose prose-neutral max-w-3xl dark:prose-invert">
       <h1>Terms & Conditions</h1>

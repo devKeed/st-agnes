@@ -1,15 +1,27 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { rentalItems, services } from '@/lib/public-data';
+import {
+  createBooking,
+  getActiveTerms,
+  type CreateBookingPayload,
+  type RentalRow,
+} from '@/lib/public-api';
+import { services } from '@/lib/public-data';
 
 const STEP_LABELS = ['Service', 'Date & Time', 'Details', 'Review'] as const;
 
-export function BookingWizard() {
+interface BookingWizardProps {
+  rentals: RentalRow[];
+}
+
+export function BookingWizard({ rentals }: BookingWizardProps) {
+  const router = useRouter();
   const [step, setStep] = useState(0);
   const [service, setService] = useState<string>(services[0].key);
   const [date, setDate] = useState('');
@@ -17,19 +29,59 @@ export function BookingWizard() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
+  const [notes, setNotes] = useState('');
   const [selectedRentals, setSelectedRentals] = useState<string[]>([]);
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const canContinue = useMemo(() => {
     if (step === 0) return Boolean(service);
     if (step === 1) return Boolean(date && time);
     if (step === 2) return Boolean(name && email);
-    return true;
-  }, [step, service, date, time, name, email]);
+    if (step === 3) return termsAccepted;
+    return false;
+  }, [step, service, date, time, name, email, termsAccepted]);
 
   function toggleRental(id: string) {
     setSelectedRentals((prev) =>
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
     );
+  }
+
+  async function submitBooking() {
+    setError(null);
+    setSubmitting(true);
+
+    try {
+      const terms = await getActiveTerms();
+      const startTime = new Date(`${date}T${time}:00+01:00`).toISOString();
+
+      const payload: CreateBookingPayload = {
+        clientName: name,
+        clientEmail: email,
+        clientPhone: phone || undefined,
+        serviceType: service as CreateBookingPayload['serviceType'],
+        startTime,
+        notes: notes || undefined,
+        specialRequests: notes || undefined,
+        termsAccepted,
+        termsVersionId: terms.id,
+        rentalItems:
+          service === 'RENTAL'
+            ? selectedRentals.map((rentalProductId) => ({ rentalProductId }))
+            : undefined,
+      };
+
+      const response = await createBooking(payload);
+      router.push(
+        `/booking/confirm?manageToken=${encodeURIComponent(response.manageToken)}&manageUrl=${encodeURIComponent(response.manageUrl)}`,
+      );
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Unable to create booking. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -76,7 +128,7 @@ export function BookingWizard() {
               <div className="md:col-span-2">
                 <Label className="mb-2 block">Select rental items</Label>
                 <div className="grid gap-2 md:grid-cols-2">
-                  {rentalItems.map((item) => (
+                  {rentals.map((item) => (
                     <button
                       key={item.id}
                       type="button"
@@ -115,6 +167,10 @@ export function BookingWizard() {
               <Label htmlFor="phone">Phone</Label>
               <Input id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} />
             </div>
+            <div className="space-y-2 md:col-span-2">
+              <Label htmlFor="notes">Notes (optional)</Label>
+              <Input id="notes" value={notes} onChange={(e) => setNotes(e.target.value)} />
+            </div>
           </div>
         )}
 
@@ -132,15 +188,24 @@ export function BookingWizard() {
             <p>
               <span className="font-medium">Phone:</span> {phone || '—'}
             </p>
+            <p>
+              <span className="font-medium">Notes:</span> {notes || '—'}
+            </p>
             {service === 'RENTAL' && (
               <p>
                 <span className="font-medium">Rental items:</span>{' '}
                 {selectedRentals.length > 0 ? selectedRentals.join(', ') : 'None selected'}
               </p>
             )}
-            <p className="pt-2 text-muted-foreground">
-              This is a UI flow scaffold. Next step is wiring submission to the backend booking endpoint.
-            </p>
+            <label className="flex items-center gap-2 pt-2">
+              <input
+                type="checkbox"
+                checked={termsAccepted}
+                onChange={(e) => setTermsAccepted(e.target.checked)}
+              />
+              <span className="text-muted-foreground">I accept the current terms and conditions.</span>
+            </label>
+            {error ? <p className="pt-1 text-sm text-red-600">{error}</p> : null}
           </div>
         )}
 
@@ -158,8 +223,8 @@ export function BookingWizard() {
               Continue
             </Button>
           ) : (
-            <Button asChild>
-              <a href="/booking/confirm">Confirm booking</a>
+            <Button onClick={submitBooking} disabled={!canContinue || submitting}>
+              {submitting ? 'Submitting...' : 'Confirm booking'}
             </Button>
           )}
         </div>
