@@ -1,7 +1,5 @@
 import type { Metadata } from 'next';
 import { Cormorant_Garamond, Inter } from 'next/font/google';
-import { SiteFooter } from '@/components/layout/site-footer';
-import { SiteHeader } from '@/components/layout/site-header';
 import { Providers } from './providers';
 import './globals.css';
 
@@ -29,11 +27,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${display.variable} ${sans.variable} h-full`}>
       <body className="relative min-h-full antialiased">
-        <Providers>
-          <SiteHeader />
-          <main className="relative z-10">{children}</main>
-          <SiteFooter />
-        </Providers>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

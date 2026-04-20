@@ -1,21 +1,29 @@
 import Link from 'next/link';
 import { Instagram, Youtube, Music2 } from 'lucide-react';
 
-export function SiteFooter() {
+interface Props {
+  content?: Record<string, string>;
+}
+
+export function SiteFooter({ content = {} }: Props) {
+  const t = (key: string, fallback: string) => content[key] ?? fallback;
+
   return (
     <footer className="relative mt-24 border-t border-border/60 bg-surface/60">
       <div className="mx-auto w-full max-w-[1440px] px-5 py-16 md:px-10 md:py-20">
         <div className="grid gap-14 md:grid-cols-12">
           <div className="space-y-6 md:col-span-5">
             <div>
-              <p className="eyebrow">Correspondence</p>
+              <p className="eyebrow">{t('footer_newsletter_eyebrow', 'Correspondence')}</p>
               <h3 className="display-lg mt-3">
-                Letters from the atelier.
+                {t('footer_newsletter_title', 'Letters from the atelier.')}
               </h3>
             </div>
             <p className="max-w-md text-sm leading-relaxed text-muted-foreground">
-              Occasional dispatches — new collections, studio stories, and first access to
-              private fittings. No noise, only the things worth keeping.
+              {t(
+                'footer_newsletter_body',
+                'Occasional dispatches — new collections, studio stories, and first access to private fittings. No noise, only the things worth keeping.',
+              )}
             </p>
             <form className="group relative flex items-center border-b border-foreground/40 focus-within:border-foreground">
               <input
@@ -54,23 +62,23 @@ export function SiteFooter() {
           </div>
 
           <div className="md:col-span-3">
-            <p className="eyebrow mb-5">Studio</p>
+            <p className="eyebrow mb-5">{t('footer_studio_eyebrow', 'Studio')}</p>
             <address className="space-y-2 not-italic text-sm text-muted-foreground">
-              <p>By appointment only</p>
-              <p>Lagos, Nigeria</p>
+              <p>{t('footer_studio_hours', 'By appointment only')}</p>
+              <p>{t('footer_studio_city', 'Lagos, Nigeria')}</p>
               <a
-                href="mailto:studio@stagnes.com"
+                href={`mailto:${t('footer_studio_email', 'studio@stagnes.com')}`}
                 className="link-underline mt-2 inline-block text-foreground"
               >
-                studio@stagnes.com
+                {t('footer_studio_email', 'studio@stagnes.com')}
               </a>
             </address>
 
             <div className="mt-6 flex items-center gap-2">
               {[
-                { href: '#', label: 'Instagram', icon: Instagram },
-                { href: '#', label: 'YouTube', icon: Youtube },
-                { href: '#', label: 'TikTok', icon: Music2 },
+                { href: content.footer_social_instagram ?? '#', label: 'Instagram', icon: Instagram },
+                { href: content.footer_social_youtube ?? '#', label: 'YouTube', icon: Youtube },
+                { href: content.footer_social_tiktok ?? '#', label: 'TikTok', icon: Music2 },
               ].map(({ href, label, icon: Icon }) => (
                 <a
                   key={label}
@@ -86,10 +94,11 @@ export function SiteFooter() {
         </div>
 
         <div className="mt-16 flex flex-col gap-4 border-t border-border/60 pt-6 text-[11px] uppercase tracking-[0.28em] text-muted-foreground md:flex-row md:items-center md:justify-between">
-          <p>© {new Date().getFullYear()} St Agnes Atelier</p>
-          <p className="font-display text-base normal-case tracking-[0.2em]">Made with care</p>
+          <p>© {new Date().getFullYear()} {t('footer_copyright_name', 'St Agnes Atelier')}</p>
+          <p className="font-display text-base normal-case tracking-[0.2em]">
+            {t('footer_tagline', 'Made with care')}
+          </p>
           <div className="flex items-center gap-6">
-            <Link href="/admin" className="transition-colors hover:text-foreground">Admin</Link>
             <Link href="/terms" className="transition-colors hover:text-foreground">Terms</Link>
             <Link href="/privacy" className="transition-colors hover:text-foreground">Privacy</Link>
           </div>

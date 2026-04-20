@@ -3,18 +3,7 @@ import { ArrowUpRight } from 'lucide-react';
 import { getContentMap, getPublicGallery } from '@/lib/public-api';
 import { galleryItems, services } from '@/lib/public-data';
 
-const pressLogos = [
-  'Vogue',
-  "Harper's Bazaar",
-  'The Guardian',
-  'Marie Claire',
-  'Elle',
-  'Allure',
-  'BellaNaija',
-  'Yahoo',
-];
-
-const stories = [
+const defaultStories = [
   {
     tag: 'Campaign',
     date: 'March 2026',
@@ -28,7 +17,8 @@ const stories = [
     tag: 'Journal',
     date: 'February 2026',
     title: 'On the Quiet Power of Detail',
-    excerpt: 'A meditation on hand-finishing, drape, and the parts of a garment that should never be rushed.',
+    excerpt:
+      'A meditation on hand-finishing, drape, and the parts of a garment that should never be rushed.',
     image:
       'https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&w=1200&q=80',
   },
@@ -42,20 +32,58 @@ const stories = [
   },
 ];
 
+const defaultPressLogos = [
+  'Vogue',
+  "Harper's Bazaar",
+  'The Guardian',
+  'Marie Claire',
+  'Elle',
+  'Allure',
+  'BellaNaija',
+  'Yahoo',
+];
+
 export default async function Home() {
   const [content, gallery] = await Promise.all([
     getContentMap().catch(() => ({} as Record<string, string>)),
     getPublicGallery().catch(() => galleryItems),
   ]);
 
+  const t = (key: string, fallback: string) => content[key] ?? fallback;
+
   const collection = gallery.slice(0, 4);
+
+  const pressLogos = content.home_press_logos
+    ? content.home_press_logos.split(',').map((s) => s.trim()).filter(Boolean)
+    : defaultPressLogos;
+
+  const stories = [1, 2, 3].map((i, idx) => ({
+    tag: t(`home_story_${i}_tag`, defaultStories[idx].tag),
+    date: t(`home_story_${i}_date`, defaultStories[idx].date),
+    title: t(`home_story_${i}_title`, defaultStories[idx].title),
+    excerpt: t(`home_story_${i}_excerpt`, defaultStories[idx].excerpt),
+    image: t(`home_story_${i}_image`, defaultStories[idx].image),
+  }));
+
+  const heroImage = t(
+    'home_hero_image',
+    'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=2000&q=85',
+  );
+  const philosophyImage = t(
+    'home_philosophy_image',
+    'https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&w=1200&q=85',
+  );
+  const ctaImage = t(
+    'home_cta_image',
+    'https://images.unsplash.com/photo-1469334031218-e382a71b716b?auto=format&fit=crop&w=2000&q=85',
+  );
 
   return (
     <div>
       {/* HERO */}
       <section className="relative h-[calc(100vh-5rem)] min-h-[640px] w-full overflow-hidden">
         <img
-          src="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=2000&q=85"
+          src={heroImage}
           alt="St Agnes — signature editorial"
           className="absolute inset-0 h-full w-full object-cover"
         />
@@ -65,7 +93,7 @@ export default async function Home() {
           <div className="mx-auto w-full max-w-[1440px] px-5 pb-14 md:px-10 md:pb-20">
             <div className="max-w-3xl text-primary-foreground rise-in">
               <p className="section-index !text-white/80 before:!bg-white/50">
-                Spring / Summer 2026 Edit
+                {t('home_hero_eyebrow', 'Spring / Summer 2026 Edit')}
               </p>
               <h1 className="display-hero mt-5 text-white">
                 {content.hero_title ?? (
@@ -76,25 +104,27 @@ export default async function Home() {
                 )}
               </h1>
               <p className="mt-6 max-w-xl text-base leading-relaxed text-white/85">
-                {content.hero_subtitle ??
-                  'An atelier of bespoke design, precision alterations, and curated rentals — crafted for life\'s most considered moments.'}
+                {t(
+                  'hero_subtitle',
+                  "An atelier of bespoke design, precision alterations, and curated rentals — crafted for life's most considered moments.",
+                )}
               </p>
               <div className="mt-10 flex flex-wrap items-center gap-4">
                 <Link href="/gallery" className="btn-light-premium">
-                  Explore the edit
+                  {t('home_hero_cta_primary', 'Explore the edit')}
                 </Link>
                 <Link
                   href="/booking"
                   className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.3em] text-white link-underline"
                 >
-                  Book a fitting <ArrowUpRight className="h-3.5 w-3.5" />
+                  {t('home_hero_cta_secondary', 'Book a fitting')}
+                  <ArrowUpRight className="h-3.5 w-3.5" />
                 </Link>
               </div>
             </div>
           </div>
         </div>
 
-        {/* scroll indicator */}
         <div className="absolute bottom-6 right-6 hidden flex-col items-center gap-3 text-[10px] uppercase tracking-[0.32em] text-white/70 md:flex">
           <span>Scroll</span>
           <span className="block h-10 w-px bg-white/50" />
@@ -105,23 +135,27 @@ export default async function Home() {
       <section className="mx-auto w-full max-w-[1440px] px-5 py-24 md:px-10 md:py-32">
         <div className="grid gap-12 md:grid-cols-12">
           <div className="md:col-span-5">
-            <p className="section-index">01 — The House</p>
+            <p className="section-index">{t('home_intro_eyebrow', '01 — The House')}</p>
           </div>
           <div className="md:col-span-7">
             <h2 className="display-xl">
-              A house built on considered craft — where every seam, silhouette, and stitch is an act of devotion.
+              {t(
+                'home_intro_title',
+                'A house built on considered craft — where every seam, silhouette, and stitch is an act of devotion.',
+              )}
             </h2>
             <p className="mt-8 max-w-xl text-base leading-relaxed text-muted-foreground">
-              St Agnes is an atelier for those who prefer the quiet over the crowd. We design
-              bespoke pieces for your most considered moments, tailor what you already love,
-              and offer a curated rental archive for the occasions that call for something
-              singular.
+              {t(
+                'home_intro_body',
+                'St Agnes is an atelier for those who prefer the quiet over the crowd. We design bespoke pieces for your most considered moments, tailor what you already love, and offer a curated rental archive for the occasions that call for something singular.',
+              )}
             </p>
             <Link
               href="/about"
               className="mt-8 inline-flex items-center gap-3 text-[11px] uppercase tracking-[0.3em] text-foreground link-underline"
             >
-              Discover the house <ArrowUpRight className="h-3.5 w-3.5" />
+              {t('home_intro_cta', 'Discover the house')}
+              <ArrowUpRight className="h-3.5 w-3.5" />
             </Link>
           </div>
         </div>
@@ -132,12 +166,16 @@ export default async function Home() {
         <div className="mx-auto w-full max-w-[1440px] px-5 py-24 md:px-10 md:py-32">
           <div className="mb-14 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
             <div className="space-y-4">
-              <p className="section-index">02 — Signature Edit</p>
-              <h2 className="display-xl max-w-xl">Playground ’24 Collection</h2>
+              <p className="section-index">{t('home_signature_eyebrow', '02 — Signature Edit')}</p>
+              <h2 className="display-xl max-w-xl">
+                {t('home_signature_title', 'Playground ’24 Collection')}
+              </h2>
             </div>
             <p className="max-w-sm text-sm leading-relaxed text-muted-foreground">
-              Seven sculpted pieces that capture our house code — soft structure, hand-finished
-              detail, and a celebration of line.
+              {t(
+                'home_signature_body',
+                'Seven sculpted pieces that capture our house code — soft structure, hand-finished detail, and a celebration of line.',
+              )}
             </p>
           </div>
 
@@ -146,11 +184,7 @@ export default async function Home() {
               <article key={item.id} className="group hover-grow">
                 <Link href="/gallery" className="block">
                   <div className="relative aspect-[3/4] overflow-hidden bg-muted">
-                    <img
-                      src={item.imageUrl}
-                      alt={item.title}
-                      className="h-full w-full object-cover"
-                    />
+                    <img src={item.imageUrl} alt={item.title} className="h-full w-full object-cover" />
                     <span className="absolute left-4 top-4 font-display text-sm italic text-white mix-blend-difference">
                       № {String(i + 1).padStart(2, '0')}
                     </span>
@@ -171,7 +205,7 @@ export default async function Home() {
 
           <div className="mt-16 flex justify-center">
             <Link href="/rentals" className="btn-ghost-premium">
-              Shop the archive
+              {t('home_signature_cta', 'Shop the archive')}
             </Link>
           </div>
         </div>
@@ -197,28 +231,37 @@ export default async function Home() {
           <div className="md:col-span-6">
             <div className="relative aspect-[4/5] overflow-hidden">
               <img
-                src="https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&w=1200&q=85"
+                src={philosophyImage}
                 alt="Hand detailing in the atelier"
                 className="h-full w-full object-cover"
               />
             </div>
           </div>
           <div className="md:col-span-5 md:col-start-8">
-            <p className="section-index">03 — Philosophy</p>
+            <p className="section-index">{t('home_philosophy_eyebrow', '03 — Philosophy')}</p>
             <h2 className="display-xl mt-5">
-              Every piece begins as a conversation.
+              {t('home_philosophy_title', 'Every piece begins as a conversation.')}
             </h2>
             <p className="mt-6 text-base leading-relaxed text-muted-foreground">
-              We believe the most memorable garments are born of intent — from the first sketch
-              to the final hand-finishing. Our process invites you into the atelier: to sit
-              with fabric, to see the silhouette take form, to own something that is
-              unmistakably yours.
+              {t(
+                'home_philosophy_body',
+                'We believe the most memorable garments are born of intent — from the first sketch to the final hand-finishing. Our process invites you into the atelier: to sit with fabric, to see the silhouette take form, to own something that is unmistakably yours.',
+              )}
             </p>
             <dl className="mt-10 grid grid-cols-3 gap-6 border-t border-border/60 pt-8">
               {[
-                { n: '12+', l: 'Years of craft' },
-                { n: '400', l: 'Gowns delivered' },
-                { n: '1:1', l: 'Client ratio' },
+                {
+                  n: t('home_stat_1_number', '12+'),
+                  l: t('home_stat_1_label', 'Years of craft'),
+                },
+                {
+                  n: t('home_stat_2_number', '400'),
+                  l: t('home_stat_2_label', 'Gowns delivered'),
+                },
+                {
+                  n: t('home_stat_3_number', '1:1'),
+                  l: t('home_stat_3_label', 'Client ratio'),
+                },
               ].map((stat) => (
                 <div key={stat.l}>
                   <dt className="font-display text-4xl text-foreground">{stat.n}</dt>
@@ -237,9 +280,11 @@ export default async function Home() {
         <div className="mx-auto w-full max-w-[1440px] px-5 py-24 md:px-10 md:py-32">
           <div className="grid gap-12 md:grid-cols-12">
             <div className="md:col-span-4">
-              <p className="section-index !text-white/60 before:!bg-white/40">04 — Services</p>
+              <p className="section-index !text-white/60 before:!bg-white/40">
+                {t('home_services_eyebrow', '04 — Services')}
+              </p>
               <h2 className="display-xl mt-5 text-primary-foreground">
-                Three ways to work with the house.
+                {t('home_services_title', 'Three ways to work with the house.')}
               </h2>
             </div>
             <div className="md:col-span-8">
@@ -254,10 +299,10 @@ export default async function Home() {
                     </span>
                     <div>
                       <h3 className="font-display text-3xl leading-tight md:text-4xl">
-                        {s.title}
+                        {t(`service_${s.key.toLowerCase()}_title`, s.title)}
                       </h3>
                       <p className="mt-2 max-w-lg text-sm leading-relaxed text-white/70">
-                        {s.description}
+                        {t(`service_${s.key.toLowerCase()}_description`, s.description)}
                       </p>
                     </div>
                     <Link
@@ -279,14 +324,16 @@ export default async function Home() {
       <section className="mx-auto w-full max-w-[1440px] px-5 py-24 md:px-10 md:py-32">
         <div className="mb-14 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
           <div className="space-y-4">
-            <p className="section-index">05 — Journal</p>
-            <h2 className="display-xl max-w-xl">St Agnes Stories</h2>
+            <p className="section-index">{t('home_journal_eyebrow', '05 — Journal')}</p>
+            <h2 className="display-xl max-w-xl">
+              {t('home_journal_title', 'St Agnes Stories')}
+            </h2>
           </div>
           <Link
             href="/gallery"
-            className="link-underline text-[11px] uppercase tracking-[0.3em] text-foreground"
+            className="text-[11px] uppercase tracking-[0.3em] text-foreground transition-colors hover:text-accent"
           >
-            View all entries
+            {t('home_journal_cta', 'View all entries')}
           </Link>
         </div>
 
@@ -294,11 +341,7 @@ export default async function Home() {
           <article className="group md:col-span-7 hover-grow">
             <Link href="/gallery">
               <div className="relative aspect-[16/11] overflow-hidden bg-muted">
-                <img
-                  src={stories[0].image}
-                  alt={stories[0].title}
-                  className="h-full w-full object-cover"
-                />
+                <img src={stories[0].image} alt={stories[0].title} className="h-full w-full object-cover" />
                 <span className="absolute left-5 top-5 bg-white/90 px-3 py-1 text-[10px] uppercase tracking-[0.28em] text-foreground">
                   {stories[0].tag}
                 </span>
@@ -340,26 +383,28 @@ export default async function Home() {
 
       {/* CONSULTATION CTA */}
       <section className="relative overflow-hidden">
-        <img
-          src="https://images.unsplash.com/photo-1469334031218-e382a71b716b?auto=format&fit=crop&w=2000&q=85"
-          alt=""
-          className="absolute inset-0 h-full w-full object-cover"
-        />
+        <img src={ctaImage} alt="" className="absolute inset-0 h-full w-full object-cover" />
         <div className="absolute inset-0 bg-foreground/70" />
         <div className="relative mx-auto w-full max-w-[1440px] px-5 py-28 text-center text-primary-foreground md:px-10 md:py-36">
-          <p className="section-index !text-white/70 before:!bg-white/50 justify-center">
-            06 — By Appointment
+          <p className="section-index justify-center !text-white/70 before:!bg-white/50">
+            {t('home_cta_eyebrow', '06 — By Appointment')}
           </p>
           <h2 className="display-xl mx-auto mt-6 max-w-3xl text-white">
-            Step inside the atelier. <em className="italic">Let's begin your piece.</em>
+            {content.home_cta_title ?? (
+              <>
+                Step inside the atelier. <em className="italic">Let's begin your piece.</em>
+              </>
+            )}
           </h2>
           <p className="mx-auto mt-6 max-w-xl text-base leading-relaxed text-white/80">
-            Book a private consultation to define your vision — from fabric and silhouette
-            to the occasion it will be worn for.
+            {t(
+              'home_cta_body',
+              'Book a private consultation to define your vision — from fabric and silhouette to the occasion it will be worn for.',
+            )}
           </p>
           <div className="mt-10">
             <Link href="/booking" className="btn-light-premium">
-              Schedule a consultation
+              {t('home_cta_button', 'Schedule a consultation')}
             </Link>
           </div>
         </div>

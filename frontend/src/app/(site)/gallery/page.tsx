@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowUpRight } from 'lucide-react';
-import { getPublicGallery } from '@/lib/public-api';
+import { getContentMap, getPublicGallery } from '@/lib/public-api';
 import { galleryItems } from '@/lib/public-data';
 
 export const metadata: Metadata = {
@@ -10,7 +10,11 @@ export const metadata: Metadata = {
 };
 
 export default async function GalleryPage() {
-  const items = await getPublicGallery().catch(() => galleryItems);
+  const [items, content] = await Promise.all([
+    getPublicGallery().catch(() => galleryItems),
+    getContentMap().catch(() => ({} as Record<string, string>)),
+  ]);
+  const t = (key: string, fallback: string) => content[key] ?? fallback;
 
   return (
     <div>
@@ -18,22 +22,26 @@ export default async function GalleryPage() {
       <section className="mx-auto w-full max-w-[1440px] px-5 pt-20 md:px-10 md:pt-28">
         <div className="grid gap-8 md:grid-cols-12 md:items-end">
           <div className="md:col-span-7">
-            <p className="section-index">Index — Gallery</p>
+            <p className="section-index">{t('gallery_eyebrow', 'Index — Gallery')}</p>
             <h1 className="display-hero mt-5">
-              A quiet archive of <em className="italic">collection</em> & <em className="italic">muse</em>.
+              {content.gallery_title ?? (
+                <>A quiet archive of <em className="italic">collection</em> & <em className="italic">muse</em>.</>
+              )}
             </h1>
           </div>
           <div className="md:col-span-5">
             <p className="text-base leading-relaxed text-muted-foreground">
-              A living record of the atelier's work — seasonal collections alongside the muses
-              who wear them. Browse by chapter below.
+              {t(
+                'gallery_intro',
+                "A living record of the atelier's work — seasonal collections alongside the muses who wear them. Browse by chapter below.",
+              )}
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
               <Link href="/gallery/collection" className="btn-ghost-premium h-11 px-6">
-                Collection
+                {t('gallery_tab_collection', 'Collection')}
               </Link>
               <Link href="/gallery/muse" className="btn-ghost-premium h-11 px-6">
-                Muse
+                {t('gallery_tab_muse', 'Muse')}
               </Link>
             </div>
           </div>

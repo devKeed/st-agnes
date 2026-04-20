@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { BookingWizard } from '@/components/booking/booking-wizard';
-import { getPublicRentals } from '@/lib/public-api';
+import { getContentMap, getPublicRentals } from '@/lib/public-api';
 
 export const metadata: Metadata = {
   title: 'Booking | St Agnes',
@@ -8,7 +8,11 @@ export const metadata: Metadata = {
 };
 
 export default async function BookingPage() {
-  const rentals = await getPublicRentals().catch(() => ({ data: [] }));
+  const [rentals, content] = await Promise.all([
+    getPublicRentals().catch(() => ({ data: [] })),
+    getContentMap().catch(() => ({} as Record<string, string>)),
+  ]);
+  const t = (key: string, fallback: string) => content[key] ?? fallback;
 
   return (
     <div>
@@ -17,16 +21,19 @@ export default async function BookingPage() {
         <div className="mx-auto w-full max-w-[1440px] px-5 py-20 md:px-10 md:py-24">
           <div className="grid gap-8 md:grid-cols-12 md:items-end">
             <div className="md:col-span-7">
-              <p className="section-index">Concierge — Booking</p>
+              <p className="section-index">{t('booking_eyebrow', 'Concierge — Booking')}</p>
               <h1 className="display-hero mt-5">
-                A private <em className="italic">appointment</em>.
+                {content.booking_title ?? (
+                  <>A private <em className="italic">appointment</em>.</>
+                )}
               </h1>
             </div>
             <div className="md:col-span-5">
               <p className="text-base leading-relaxed text-muted-foreground">
-                Choose your service, pick from real-time open slots, and confirm in minutes.
-                You'll receive a manage link to reschedule or cancel in accordance with our
-                studio policy.
+                {t(
+                  'booking_intro',
+                  "Choose your service, pick from real-time open slots, and confirm in minutes. You'll receive a manage link to reschedule or cancel in accordance with our studio policy.",
+                )}
               </p>
             </div>
           </div>

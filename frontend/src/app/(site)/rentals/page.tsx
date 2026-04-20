@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowUpRight } from 'lucide-react';
-import { getPublicRentals } from '@/lib/public-api';
+import { getContentMap, getPublicRentals } from '@/lib/public-api';
 import { rentalItems } from '@/lib/public-data';
 
 export const metadata: Metadata = {
@@ -10,7 +10,11 @@ export const metadata: Metadata = {
 };
 
 export default async function RentalsPage() {
-  const rentals = await getPublicRentals().catch(() => ({ data: rentalItems }));
+  const [rentals, content] = await Promise.all([
+    getPublicRentals().catch(() => ({ data: rentalItems })),
+    getContentMap().catch(() => ({} as Record<string, string>)),
+  ]);
+  const t = (key: string, fallback: string) => content[key] ?? fallback;
 
   return (
     <div>
@@ -18,15 +22,19 @@ export default async function RentalsPage() {
       <section className="mx-auto w-full max-w-[1440px] px-5 pt-20 md:px-10 md:pt-28">
         <div className="grid gap-8 md:grid-cols-12 md:items-end">
           <div className="md:col-span-7">
-            <p className="section-index">Index — Rentals</p>
+            <p className="section-index">{t('rentals_eyebrow', 'Index — Rentals')}</p>
             <h1 className="display-hero mt-5">
-              The rental <em className="italic">archive</em>.
+              {content.rentals_title ?? (
+                <>The rental <em className="italic">archive</em>.</>
+              )}
             </h1>
           </div>
           <div className="md:col-span-5">
             <p className="text-base leading-relaxed text-muted-foreground">
-              A rotating selection of signature pieces, available for weddings, galas, and
-              single-evening moments. All rentals include a pre-fitting and dedicated styling.
+              {t(
+                'rentals_intro',
+                'A rotating selection of signature pieces, available for weddings, galas, and single-evening moments. All rentals include a pre-fitting and dedicated styling.',
+              )}
             </p>
           </div>
         </div>
@@ -63,7 +71,7 @@ export default async function RentalsPage() {
 
         {rentals.data.length === 0 ? (
           <p className="py-20 text-center text-sm text-muted-foreground">
-            The archive is being refreshed. Please check back shortly.
+            {t('rentals_empty', 'The archive is being refreshed. Please check back shortly.')}
           </p>
         ) : null}
       </section>
@@ -72,10 +80,10 @@ export default async function RentalsPage() {
       <section className="bg-surface/50">
         <div className="mx-auto w-full max-w-[1440px] px-5 py-20 text-center md:px-10 md:py-24">
           <h2 className="display-lg mx-auto max-w-2xl">
-            Looking for something specific? We can source it.
+            {t('rentals_cta_title', 'Looking for something specific? We can source it.')}
           </h2>
           <Link href="/booking" className="btn-premium mt-8 inline-flex">
-            Begin a consultation
+            {t('rentals_cta_button', 'Begin a consultation')}
           </Link>
         </div>
       </section>

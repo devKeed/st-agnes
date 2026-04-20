@@ -49,31 +49,36 @@ export function SiteHeader() {
         }`}
       >
         <div className="mx-auto grid h-16 w-full max-w-[1440px] grid-cols-[1fr_auto_1fr] items-center px-5 md:h-20 md:px-10">
-          <div className="flex items-center gap-6">
+          <div className="flex items-center">
             <button
               type="button"
               aria-label="Open menu"
               onClick={() => setOpen(true)}
-              className="group inline-flex items-center gap-3 text-[11px] uppercase tracking-[0.32em] text-foreground"
+              className="group inline-flex items-center justify-center lg:hidden"
             >
-              <span className="relative flex h-5 w-5 items-center justify-center">
-                <span className="absolute h-px w-4 -translate-y-[3px] bg-current transition-transform duration-300 group-hover:w-5" />
-                <span className="absolute h-px w-3 translate-y-[3px] bg-current transition-transform duration-300 group-hover:w-5" />
+              <span className="relative flex h-6 w-6 items-center justify-center">
+                <span className="absolute h-px w-5 -translate-y-[3px] bg-current transition-transform duration-300 group-hover:w-6" />
+                <span className="absolute h-px w-4 translate-y-[3px] bg-current transition-transform duration-300 group-hover:w-6" />
               </span>
-              <span className="hidden md:inline">Menu</span>
             </button>
-            <nav className="hidden items-center gap-7 lg:flex">
+            <nav className="hidden items-center gap-8 lg:flex">
               {primaryLinks.map((link) => {
                 const active = pathname === link.href || (link.href !== '/' && pathname.startsWith(link.href));
                 return (
                   <Link
                     key={link.href}
                     href={link.href}
-                    className={`link-underline text-[11px] uppercase tracking-[0.28em] transition-colors ${
+                    className={`relative text-[11px] uppercase tracking-[0.28em] transition-colors duration-200 ${
                       active ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
                     }`}
                   >
                     {link.label}
+                    {active ? (
+                      <span
+                        aria-hidden
+                        className="absolute -bottom-2 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-accent"
+                      />
+                    ) : null}
                   </Link>
                 );
               })}
@@ -92,7 +97,7 @@ export function SiteHeader() {
           <div className="flex items-center justify-end gap-5">
             <Link
               href="/booking"
-              className="link-underline hidden text-[11px] uppercase tracking-[0.28em] text-muted-foreground hover:text-foreground md:inline-flex"
+              className="hidden text-[11px] uppercase tracking-[0.28em] text-muted-foreground transition-colors duration-200 hover:text-foreground md:inline-flex"
             >
               Book consultation
             </Link>
