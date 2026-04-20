@@ -19,12 +19,17 @@ export default async function BookingManagePage({ params }: Props) {
   }
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
-      <h1 className="text-3xl font-semibold md:text-4xl">Manage your booking</h1>
-      <p className="text-sm text-muted-foreground md:text-base">
-        Token: <span className="font-mono">{resolved.token}</span>
-      </p>
-      <ManageBookingClient token={resolved.token} />
+    <div className="mx-auto w-full max-w-[1440px] px-5 py-20 md:px-10 md:py-28">
+      <div className="mx-auto max-w-3xl space-y-8">
+        <div>
+          <p className="section-index">Concierge — Manage</p>
+          <h1 className="display-hero mt-5">Manage your booking.</h1>
+          <p className="mt-6 text-sm text-muted-foreground">
+            Token · <span className="font-mono text-foreground">{resolved.token}</span>
+          </p>
+        </div>
+        <ManageBookingClient token={resolved.token} />
+      </div>
     </div>
   );
 }
