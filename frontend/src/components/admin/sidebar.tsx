@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { ExternalLink } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { navItems } from './nav-items';
 
@@ -48,6 +49,19 @@ export function Sidebar({ onNavigate, className }: SidebarProps) {
           );
         })}
       </nav>
+
+      <div className="border-t px-3 py-4">
+        <Link
+          href="/"
+          onClick={onNavigate}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-3 rounded-md px-3 py-2 text-sm text-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+        >
+          <ExternalLink className="h-4 w-4" aria-hidden />
+          <span>View Site</span>
+        </Link>
+      </div>
     </aside>
   );
 }
