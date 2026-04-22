@@ -57,7 +57,7 @@ export class CreateRentalDto {
   @IsArray()
   @ArrayMinSize(1)
   @ArrayMaxSize(10)
-  @IsUrl({}, { each: true })
+  @IsUrl({ require_tld: false }, { each: true })
   imageUrls!: string[];
 
   @ApiProperty({

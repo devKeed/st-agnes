@@ -2,7 +2,7 @@
 
 import { FormEvent, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ApiError, apiFetch } from '@/lib/api';
+import { ApiError, apiFetch, apiUploadImage } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -29,6 +29,7 @@ interface RentalProduct {
 }
 
 const STATUSES: RentalStatus[] = ['AVAILABLE', 'RENTED', 'MAINTENANCE', 'RETIRED'];
+const SIZE_OPTIONS = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'ONE_SIZE'] as const;
 
 function errorMessage(error: unknown): string {
   if (error instanceof ApiError) return error.message;
@@ -42,11 +43,18 @@ export default function AdminRentalsPage() {
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [sizes, setSizes] = useState('');
+  const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
   const [pricePerDay, setPricePerDay] = useState('0');
   const [depositAmount, setDepositAmount] = useState('0');
   const [imageUrl, setImageUrl] = useState('');
   const [imagePublicId, setImagePublicId] = useState('');
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+
+  function toggleSize(size: string) {
+    setSelectedSizes((prev) =>
+      prev.includes(size) ? prev.filter((item) => item !== size) : [...prev, size],
+    );
+  }
 
   const rentalsQuery = useQuery({
     queryKey: ['rentals', 'admin'],
@@ -61,10 +69,7 @@ export default function AdminRentalsPage() {
         body: {
           name,
           description: description.trim() || undefined,
-          sizes: sizes
-            .split(',')
-            .map((v) => v.trim())
-            .filter(Boolean),
+          sizes: selectedSizes,
           pricePerDay: Number(pricePerDay),
           depositAmount: Number(depositAmount),
           imageUrls: [imageUrl.trim()],
@@ -78,7 +83,7 @@ export default function AdminRentalsPage() {
       setFeedback('Rental created.');
       setName('');
       setDescription('');
-      setSizes('');
+      setSelectedSizes([]);
       setPricePerDay('0');
       setDepositAmount('0');
       setImageUrl('');
@@ -116,11 +121,31 @@ export default function AdminRentalsPage() {
   function onCreate(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setFeedback(null);
-    if (!name.trim() || !sizes.trim() || !imageUrl.trim() || !imagePublicId.trim()) {
-      setFeedback('Name, sizes, image URL, and image public ID are required.');
+    if (isUploadingImage) {
+      setFeedback('Please wait for the image upload to finish.');
+      return;
+    }
+    if (!name.trim() || selectedSizes.length === 0 || !imageUrl.trim() || !imagePublicId.trim()) {
+      setFeedback('Name, sizes, and an uploaded image are required.');
       return;
     }
     createMutation.mutate();
+  }
+
+  async function onUploadImage(file: File | null) {
+    if (!file) return;
+    setFeedback(null);
+    setIsUploadingImage(true);
+    try {
+      const uploaded = await apiUploadImage(file, 'st-agnes/rentals');
+      setImageUrl(uploaded.url);
+      setImagePublicId(uploaded.publicId);
+      setFeedback('Image uploaded successfully.');
+    } catch (error) {
+      setFeedback(errorMessage(error));
+    } finally {
+      setIsUploadingImage(false);
+    }
   }
 
   return (
@@ -139,42 +164,87 @@ export default function AdminRentalsPage() {
       <Card>
         <CardHeader>
           <CardTitle>Create rental</CardTitle>
-          <CardDescription>Upload first, then paste CDN URLs and public IDs.</CardDescription>
+          <CardDescription>Upload an image from device. URL and public ID are filled automatically.</CardDescription>
         </CardHeader>
         <CardContent>
           <form className="grid gap-3 md:grid-cols-2" onSubmit={onCreate}>
-            <Input placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} />
-            <Input
-              placeholder="Sizes (e.g. S,M,L)"
-              value={sizes}
-              onChange={(e) => setSizes(e.target.value)}
-            />
-            <Input
-              type="number"
-              min="0"
-              step="0.01"
-              placeholder="Price per day"
-              value={pricePerDay}
-              onChange={(e) => setPricePerDay(e.target.value)}
-            />
-            <Input
-              type="number"
-              min="0"
-              step="0.01"
-              placeholder="Deposit amount"
-              value={depositAmount}
-              onChange={(e) => setDepositAmount(e.target.value)}
-            />
-            <Input
-              placeholder="Image URL"
-              value={imageUrl}
-              onChange={(e) => setImageUrl(e.target.value)}
-            />
-            <Input
-              placeholder="Image public ID"
-              value={imagePublicId}
-              onChange={(e) => setImagePublicId(e.target.value)}
-            />
+            <div>
+              <label className="mb-1 block text-xs text-muted-foreground">Name</label>
+              <Input placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} />
+            </div>
+            <div>
+              <label className="mb-1 block text-xs text-muted-foreground">Sizes</label>
+              <details className="rounded-md border bg-background px-3 py-2 text-sm">
+                <summary className="cursor-pointer select-none list-none">
+                  {selectedSizes.length > 0 ? selectedSizes.join(', ') : 'Select one or more sizes'}
+                </summary>
+                <div className="mt-2 grid grid-cols-2 gap-2">
+                  {SIZE_OPTIONS.map((size) => {
+                    const checked = selectedSizes.includes(size);
+                    return (
+                      <label key={size} className="inline-flex items-center gap-2 text-xs">
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={() => toggleSize(size)}
+                        />
+                        <span>{size.replace('_', ' ')}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </details>
+            </div>
+            <div>
+              <label className="mb-1 block text-xs text-muted-foreground">Price per day (₦)</label>
+              <Input
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="0"
+                value={pricePerDay}
+                onChange={(e) => setPricePerDay(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-xs text-muted-foreground">Deposit amount (₦)</label>
+              <Input
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="0"
+                value={depositAmount}
+                onChange={(e) => setDepositAmount(e.target.value)}
+              />
+            </div>
+            <div className="md:col-span-2">
+              <label className="mb-1 block text-xs text-muted-foreground">Image file</label>
+              <Input
+                type="file"
+                accept="image/*"
+                onChange={(e) => void onUploadImage(e.target.files?.[0] ?? null)}
+                disabled={isUploadingImage || createMutation.isPending}
+              />
+              <p className="mt-1 text-xs text-muted-foreground">
+                {isUploadingImage ? 'Uploading image…' : 'Choose an image to auto-fill URL and public ID.'}
+              </p>
+            </div>
+            <div>
+              <label className="mb-1 block text-xs text-muted-foreground">Image URL</label>
+              <Input
+                placeholder="Auto-filled after upload"
+                value={imageUrl}
+                onChange={(e) => setImageUrl(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-xs text-muted-foreground">Image public ID</label>
+              <Input
+                placeholder="Auto-filled after upload"
+                value={imagePublicId}
+                onChange={(e) => setImagePublicId(e.target.value)}
+              />
+            </div>
             <div className="md:col-span-2">
               <textarea
                 placeholder="Description (optional)"
@@ -185,8 +255,12 @@ export default function AdminRentalsPage() {
               />
             </div>
             <div className="md:col-span-2">
-              <Button type="submit" disabled={createMutation.isPending}>
-                {createMutation.isPending ? 'Creating…' : 'Create rental'}
+              <Button type="submit" disabled={createMutation.isPending || isUploadingImage}>
+                {isUploadingImage
+                  ? 'Uploading image…'
+                  : createMutation.isPending
+                    ? 'Creating…'
+                    : 'Create rental'}
               </Button>
             </div>
           </form>

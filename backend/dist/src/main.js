@@ -4,10 +4,13 @@ const core_1 = require("@nestjs/core");
 const common_1 = require("@nestjs/common");
 const config_1 = require("@nestjs/config");
 const swagger_1 = require("@nestjs/swagger");
+const path_1 = require("path");
 const app_module_1 = require("./app.module");
 const filters_1 = require("./common/filters");
 async function bootstrap() {
-    const app = await core_1.NestFactory.create(app_module_1.AppModule, { bufferLogs: false });
+    const app = await core_1.NestFactory.create(app_module_1.AppModule, {
+        bufferLogs: false,
+    });
     const config = app.get(config_1.ConfigService);
     const logger = new common_1.Logger('Bootstrap');
     app.setGlobalPrefix('api', { exclude: [''] });
@@ -24,6 +27,9 @@ async function bootstrap() {
         transformOptions: { enableImplicitConversion: true },
     }));
     app.useGlobalFilters(new filters_1.HttpExceptionFilter());
+    app.useStaticAssets((0, path_1.join)(process.cwd(), 'uploads'), {
+        prefix: '/uploads/',
+    });
     const swaggerConfig = new swagger_1.DocumentBuilder()
         .setTitle('St Agnes API')
         .setDescription('Booking, rentals, gallery, and CMS API for St Agnes.')

@@ -40,6 +40,15 @@ interface FetchOptions extends Omit<RequestInit, 'body'> {
   auth?: boolean;
 }
 
+interface UploadImageResponse {
+  url: string;
+  publicId: string;
+  format: string;
+  width: number;
+  height: number;
+  bytes: number;
+}
+
 export async function apiFetch<T>(path: string, opts: FetchOptions = {}): Promise<T> {
   const { body, auth = true, headers, ...rest } = opts;
   const finalHeaders: Record<string, string> = {
@@ -77,4 +86,37 @@ export async function apiFetch<T>(path: string, opts: FetchOptions = {}): Promis
   }
 
   return json as T;
+}
+
+export async function apiUploadImage(file: File, folder?: string): Promise<UploadImageResponse> {
+  const token = getAccessToken();
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const query = folder ? `?folder=${encodeURIComponent(folder)}` : '';
+  const res = await fetch(`${API_BASE}/upload${query}`, {
+    method: 'POST',
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: formData,
+  });
+
+  const text = await res.text();
+  let json: unknown = undefined;
+  if (text) {
+    try {
+      json = JSON.parse(text);
+    } catch {
+      json = text;
+    }
+  }
+
+  if (!res.ok) {
+    const message =
+      (json && typeof json === 'object' && 'message' in json
+        ? String((json as { message: unknown }).message)
+        : undefined) ?? `Upload failed with status ${res.status}`;
+    throw new ApiError(res.status, message, json);
+  }
+
+  return json as UploadImageResponse;
 }

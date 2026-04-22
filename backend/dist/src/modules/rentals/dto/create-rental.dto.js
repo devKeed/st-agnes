@@ -71,7 +71,7 @@ __decorate([
     (0, class_validator_1.IsArray)(),
     (0, class_validator_1.ArrayMinSize)(1),
     (0, class_validator_1.ArrayMaxSize)(10),
-    (0, class_validator_1.IsUrl)({}, { each: true }),
+    (0, class_validator_1.IsUrl)({ require_tld: false }, { each: true }),
     __metadata("design:type", Array)
 ], CreateRentalDto.prototype, "imageUrls", void 0);
 __decorate([

@@ -15,6 +15,10 @@ var UploadService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UploadService = void 0;
 const common_1 = require("@nestjs/common");
+const config_1 = require("@nestjs/config");
+const path_1 = require("path");
+const promises_1 = require("fs/promises");
+const crypto_1 = require("crypto");
 const cloudinary_provider_1 = require("./cloudinary.provider");
 const ALLOWED_FOLDERS = new Set([
     'st-agnes/rentals',
@@ -25,12 +29,34 @@ const ALLOWED_FOLDERS = new Set([
 const DEFAULT_FOLDER = 'st-agnes/misc';
 let UploadService = UploadService_1 = class UploadService {
     cloudinary;
+    config;
     logger = new common_1.Logger(UploadService_1.name);
-    constructor(cloudinary) {
+    cloudinaryEnabled;
+    uploadsDir;
+    publicBaseUrl;
+    constructor(cloudinary, config) {
         this.cloudinary = cloudinary;
+        this.config = config;
+        const cloudName = this.config.get('CLOUDINARY_CLOUD_NAME');
+        const apiKey = this.config.get('CLOUDINARY_API_KEY');
+        const apiSecret = this.config.get('CLOUDINARY_API_SECRET');
+        this.cloudinaryEnabled = Boolean(cloudName && apiKey && apiSecret);
+        this.uploadsDir = (0, path_1.join)(process.cwd(), 'uploads');
+        const configuredBaseUrl = this.config.get('BACKEND_PUBLIC_URL');
+        if (configuredBaseUrl) {
+            this.publicBaseUrl = configuredBaseUrl.replace(/\/$/, '');
+        }
+        else {
+            const port = this.config.get('PORT', '3001');
+            this.publicBaseUrl = `http://localhost:${port}`;
+        }
     }
     async uploadImage(file, folder) {
         const targetFolder = this.resolveFolder(folder);
+        if (!this.cloudinaryEnabled) {
+            this.logger.warn('Cloudinary is not configured. Falling back to local disk storage for uploads.');
+            return this.uploadImageLocally(file);
+        }
         try {
             const result = await new Promise((resolve, reject) => {
                 const stream = this.cloudinary.uploader.upload_stream({
@@ -58,12 +84,27 @@ let UploadService = UploadService_1 = class UploadService {
         }
         catch (error) {
             this.logger.error(`Cloudinary upload failed (folder=${targetFolder}): ${error.message}`, error.stack);
-            throw new common_1.InternalServerErrorException('Image upload failed');
+            this.logger.warn('Falling back to local disk storage due to Cloudinary upload failure.');
+            return this.uploadImageLocally(file);
         }
     }
     async deleteImage(publicId) {
         if (!publicId || publicId.trim() === '') {
             throw new common_1.BadRequestException('publicId is required');
+        }
+        if (publicId.startsWith('local/')) {
+            const filename = publicId.replace(/^local\//, '');
+            const filePath = (0, path_1.join)(this.uploadsDir, filename);
+            try {
+                await (0, promises_1.unlink)(filePath);
+                return { result: 'ok', publicId };
+            }
+            catch {
+                return { result: 'not found', publicId };
+            }
+        }
+        if (!this.cloudinaryEnabled) {
+            return { result: 'not found', publicId };
         }
         try {
             const result = await this.cloudinary.uploader.destroy(publicId, {
@@ -80,6 +121,22 @@ let UploadService = UploadService_1 = class UploadService {
             throw new common_1.InternalServerErrorException('Image delete failed');
         }
     }
+    async uploadImageLocally(file) {
+        await (0, promises_1.mkdir)(this.uploadsDir, { recursive: true });
+        const originalExt = (0, path_1.extname)(file.originalname).toLowerCase();
+        const safeExt = originalExt || '.jpg';
+        const filename = `${(0, crypto_1.randomUUID)()}${safeExt}`;
+        const absolutePath = (0, path_1.join)(this.uploadsDir, filename);
+        await (0, promises_1.writeFile)(absolutePath, file.buffer);
+        return {
+            url: `${this.publicBaseUrl}/uploads/${filename}`,
+            publicId: `local/${filename}`,
+            format: safeExt.replace('.', ''),
+            width: 0,
+            height: 0,
+            bytes: file.size,
+        };
+    }
     resolveFolder(folder) {
         if (!folder)
             return DEFAULT_FOLDER;
@@ -92,6 +149,6 @@ exports.UploadService = UploadService;
 exports.UploadService = UploadService = UploadService_1 = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, common_1.Inject)(cloudinary_provider_1.CLOUDINARY)),
-    __metadata("design:paramtypes", [Object])
+    __metadata("design:paramtypes", [Object, config_1.ConfigService])
 ], UploadService);
 //# sourceMappingURL=upload.service.js.map

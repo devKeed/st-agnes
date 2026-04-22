@@ -2,7 +2,7 @@
 
 import { FormEvent, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ApiError, apiFetch } from '@/lib/api';
+import { ApiError, apiFetch, apiUploadImage } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -35,6 +35,7 @@ export default function AdminGalleryPage() {
   const [description, setDescription] = useState('');
   const [imageUrl, setImageUrl] = useState('');
   const [imagePublicId, setImagePublicId] = useState('');
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
 
   const galleryQuery = useQuery({
     queryKey: ['gallery', 'admin'],
@@ -101,6 +102,22 @@ export default function AdminGalleryPage() {
     createMutation.mutate();
   }
 
+  async function onUploadImage(file: File | null) {
+    if (!file) return;
+    setFeedback(null);
+    setIsUploadingImage(true);
+    try {
+      const uploaded = await apiUploadImage(file, 'st-agnes/gallery');
+      setImageUrl(uploaded.url);
+      setImagePublicId(uploaded.publicId);
+      setFeedback('Image uploaded successfully.');
+    } catch (error) {
+      setFeedback(errorMessage(error));
+    } finally {
+      setIsUploadingImage(false);
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div>
@@ -117,7 +134,7 @@ export default function AdminGalleryPage() {
       <Card>
         <CardHeader>
           <CardTitle>Add item</CardTitle>
-          <CardDescription>Add a gallery image and optional Cloudinary public ID.</CardDescription>
+          <CardDescription>Upload from device. URL and public ID are filled automatically.</CardDescription>
         </CardHeader>
         <CardContent>
           <form className="grid gap-3 md:grid-cols-2" onSubmit={onCreate}>
@@ -131,12 +148,18 @@ export default function AdminGalleryPage() {
             </select>
             <Input placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)} />
             <Input
-              placeholder="Image URL"
+              type="file"
+              accept="image/*"
+              onChange={(e) => void onUploadImage(e.target.files?.[0] ?? null)}
+              disabled={isUploadingImage || createMutation.isPending}
+            />
+            <Input
+              placeholder="Image URL (auto-filled after upload)"
               value={imageUrl}
               onChange={(e) => setImageUrl(e.target.value)}
             />
             <Input
-              placeholder="Image public ID (optional)"
+              placeholder="Image public ID (auto-filled after upload)"
               value={imagePublicId}
               onChange={(e) => setImagePublicId(e.target.value)}
             />

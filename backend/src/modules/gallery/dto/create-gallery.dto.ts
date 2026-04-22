@@ -31,7 +31,7 @@ export class CreateGalleryDto {
   description?: string;
 
   @ApiProperty({ example: 'https://res.cloudinary.com/.../image/upload/.../look04.jpg' })
-  @IsUrl()
+  @IsUrl({ require_tld: false })
   imageUrl!: string;
 
   @ApiPropertyOptional({

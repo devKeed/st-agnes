@@ -1,12 +1,16 @@
 import { NestFactory, Reflector } from '@nestjs/core';
 import { Logger, ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { join } from 'path';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, { bufferLogs: false });
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    bufferLogs: false,
+  });
   const config = app.get(ConfigService);
   const logger = new Logger('Bootstrap');
 
@@ -29,6 +33,10 @@ async function bootstrap() {
   );
 
   app.useGlobalFilters(new HttpExceptionFilter());
+
+  app.useStaticAssets(join(process.cwd(), 'uploads'), {
+    prefix: '/uploads/',
+  });
 
   const swaggerConfig = new DocumentBuilder()
     .setTitle('St Agnes API')
