@@ -25,6 +25,16 @@ export default async function RentalDetailPage({ params }: Props) {
 
   const imageUrl = 'imageUrl' in item ? item.imageUrl : item.imageUrls?.[0];
   const sizes = item.sizes ?? [];
+  const bookingHref =
+    sizes.length > 0
+      ? {
+          pathname: '/booking',
+          query: { service: 'RENTAL', rentalId: item.id, size: sizes[0] },
+        }
+      : {
+          pathname: '/booking',
+          query: { service: 'RENTAL', rentalId: item.id },
+        };
 
   return (
     <div>
@@ -72,12 +82,16 @@ export default async function RentalDetailPage({ params }: Props) {
                   <dd className="flex flex-wrap justify-end gap-2">
                     {sizes.length > 0 ? (
                       sizes.map((s) => (
-                        <span
+                        <Link
                           key={s}
+                          href={{
+                            pathname: '/booking',
+                            query: { service: 'RENTAL', rentalId: item.id, size: s },
+                          }}
                           className="inline-flex h-9 min-w-9 items-center justify-center border border-foreground/40 px-3 text-[11px] uppercase tracking-[0.2em]"
                         >
                           {s}
-                        </span>
+                        </Link>
                       ))
                     ) : (
                       <span className="text-muted-foreground">Ask the studio</span>
@@ -86,8 +100,14 @@ export default async function RentalDetailPage({ params }: Props) {
                 </div>
               </dl>
 
+              {sizes.length > 0 ? (
+                <p className="mt-4 text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
+                  Select a size to prefill your booking.
+                </p>
+              ) : null}
+
               <div className="mt-10 flex flex-col gap-4">
-                <Link href="/booking" className="btn-premium w-full">Book this piece</Link>
+                <Link href={bookingHref} className="btn-premium w-full">Book this piece</Link>
                 <Link href="/rentals" className="btn-ghost-premium w-full">View more rentals</Link>
               </div>
 

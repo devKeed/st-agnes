@@ -1,17 +1,44 @@
 import type { Metadata } from 'next';
 import { BookingWizard } from '@/components/booking/booking-wizard';
-import { getContentMap, getPublicRentals } from '@/lib/public-api';
+import { getContentMap, getPublicRental, getPublicRentals } from '@/lib/public-api';
 
 export const metadata: Metadata = {
   title: 'Booking | St Agnes',
   description: 'Schedule a private consultation with the St Agnes atelier.',
 };
 
-export default async function BookingPage() {
-  const [rentals, content] = await Promise.all([
+interface Props {
+  searchParams: Promise<{ service?: string; rentalId?: string; size?: string }>;
+}
+
+export default async function BookingPage({ searchParams }: Props) {
+  const resolved = await searchParams;
+  const [rentals, content, requestedRental] = await Promise.all([
     getPublicRentals().catch(() => ({ data: [] })),
     getContentMap().catch(() => ({} as Record<string, string>)),
+    resolved.rentalId ? getPublicRental(resolved.rentalId).catch(() => null) : Promise.resolve(null),
   ]);
+
+  const rentalsData =
+    requestedRental && !rentals.data.some((item) => item.id === requestedRental.id)
+      ? [requestedRental, ...rentals.data]
+      : rentals.data;
+
+  const requestedService = resolved.service;
+  const initialService =
+    requestedService === 'CUSTOM_DESIGN' ||
+    requestedService === 'ALTERATION' ||
+    requestedService === 'RENTAL'
+      ? requestedService
+      : undefined;
+
+  const initialRental = rentalsData.find((item) => item.id === resolved.rentalId);
+  const requestedSize = resolved.size?.trim().toUpperCase();
+  const initialRentalSize =
+    initialRental && requestedSize && initialRental.sizes.includes(requestedSize)
+      ? requestedSize
+      : undefined;
+
   const t = (key: string, fallback: string) => content[key] ?? fallback;
 
   return (
@@ -42,7 +69,12 @@ export default async function BookingPage() {
 
       {/* WIZARD */}
       <section className="mx-auto w-full max-w-[1440px] px-5 py-16 md:px-10 md:py-20">
-        <BookingWizard rentals={rentals.data} />
+        <BookingWizard
+          rentals={rentalsData}
+          initialService={initialService}
+          initialRentalId={initialRental?.id}
+          initialRentalSize={initialRentalSize}
+        />
       </section>
     </div>
   );

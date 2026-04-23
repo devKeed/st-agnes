@@ -94,12 +94,21 @@ function buildCalendarCells(monthValue: string, availableDates: Set<string>) {
 
 interface BookingWizardProps {
   rentals: RentalRow[];
+  initialService?: ServiceKey;
+  initialRentalId?: string;
+  initialRentalSize?: string;
 }
 
-export function BookingWizard({ rentals }: BookingWizardProps) {
+export function BookingWizard({
+  rentals,
+  initialService,
+  initialRentalId,
+  initialRentalSize,
+}: BookingWizardProps) {
   const router = useRouter();
-  const [step, setStep] = useState(0);
-  const [service, setService] = useState<ServiceKey>(services[0].key);
+  const minStep = initialService === 'RENTAL' && initialRentalId ? 1 : 0;
+  const [step, setStep] = useState(minStep);
+  const [service, setService] = useState<ServiceKey>(initialService ?? services[0].key);
   const [month, setMonth] = useState(getCurrentMonthValue());
   const [availabilityDays, setAvailabilityDays] = useState<AvailabilityDay[]>([]);
   const [availabilityLoading, setAvailabilityLoading] = useState(false);
@@ -110,7 +119,12 @@ export function BookingWizard({ rentals }: BookingWizardProps) {
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [notes, setNotes] = useState('');
-  const [selectedRentals, setSelectedRentals] = useState<string[]>([]);
+  const [selectedRentals, setSelectedRentals] = useState<string[]>(
+    initialRentalId ? [initialRentalId] : [],
+  );
+  const [selectedRentalSizes, setSelectedRentalSizes] = useState<Record<string, string>>(() =>
+    initialRentalId && initialRentalSize ? { [initialRentalId]: initialRentalSize } : {},
+  );
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -178,18 +192,46 @@ export function BookingWizard({ rentals }: BookingWizardProps) {
     if (step === 0) return Boolean(service);
     if (step === 1) {
       if (!date || !time) return false;
-      if (service === 'RENTAL') return selectedRentals.length > 0;
+      if (service === 'RENTAL') {
+        if (selectedRentals.length === 0) return false;
+        return selectedRentals.every((id) => {
+          const rental = rentals.find((item) => item.id === id);
+          if (!rental || rental.sizes.length === 0) return true;
+          return Boolean(selectedRentalSizes[id]);
+        });
+      }
       return true;
     }
     if (step === 2) return Boolean(name && email);
     if (step === 3) return termsAccepted;
     return false;
-  }, [step, service, date, time, selectedRentals, name, email, termsAccepted]);
+  }, [step, service, date, time, selectedRentals, selectedRentalSizes, rentals, name, email, termsAccepted]);
 
-  function toggleRental(id: string) {
-    setSelectedRentals((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
-    );
+  function getDefaultSize(id: string) {
+    const rental = rentals.find((item) => item.id === id);
+    return rental?.sizes[0] ?? '';
+  }
+
+  function addRental(id: string) {
+    if (selectedRentals.includes(id)) return;
+    const defaultSize = getDefaultSize(id);
+    setSelectedRentals((prev) => [...prev, id]);
+    if (defaultSize) {
+      setSelectedRentalSizes((prev) => ({ ...prev, [id]: defaultSize }));
+    }
+  }
+
+  function removeRental(id: string) {
+    setSelectedRentals((prev) => prev.filter((x) => x !== id));
+    setSelectedRentalSizes((prev) => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+  }
+
+  function selectRentalSize(id: string, size: string) {
+    setSelectedRentalSizes((prev) => ({ ...prev, [id]: size }));
   }
 
   async function submitBooking() {
@@ -211,13 +253,16 @@ export function BookingWizard({ rentals }: BookingWizardProps) {
         termsVersionId: terms.id,
         rentalItems:
           service === 'RENTAL'
-            ? selectedRentals.map((rentalProductId) => ({ rentalProductId }))
+            ? selectedRentals.map((rentalProductId) => ({
+                rentalProductId,
+                selectedSize: selectedRentalSizes[rentalProductId] || undefined,
+              }))
             : undefined,
       };
 
       const response = await createBooking(payload);
       router.push(
-        `/booking/confirm?manageToken=${encodeURIComponent(response.manageToken)}&manageUrl=${encodeURIComponent(response.manageUrl)}`,
+        `/booking/confirm?manageToken=${encodeURIComponent(response.manageToken)}`,
       );
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Unable to create booking. Please try again.');
@@ -393,23 +438,99 @@ export function BookingWizard({ rentals }: BookingWizardProps) {
             {service === 'RENTAL' && (
               <div className="md:col-span-2">
                 <Label className="mb-2 block">Select rental items</Label>
+                <p className="mb-3 text-xs text-muted-foreground">
+                  Add or remove pieces as needed.
+                </p>
+
+                {selectedRentals.length > 0 ? (
+                  <div className="mb-3 rounded-xl border border-border/70 bg-stone-50/70 p-3">
+                    <p className="mb-2 text-xs font-medium uppercase tracking-[0.2em] text-stone-600">Selected pieces</p>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedRentals.map((id) => {
+                        const rental = rentals.find((item) => item.id === id);
+                        const label = rental?.name ?? id;
+                        const size = selectedRentalSizes[id];
+
+                        return (
+                          <div
+                            key={id}
+                            className="inline-flex items-center gap-2 rounded-full border border-stone-300 bg-white px-3 py-1 text-xs"
+                          >
+                            <span className="font-medium">{label}</span>
+                            {size ? <span className="text-muted-foreground">({size})</span> : null}
+                            <button
+                              type="button"
+                              onClick={() => removeRental(id)}
+                              className="text-[11px] text-stone-600 hover:text-stone-900"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ) : null}
+
                 <div className="grid gap-2 md:grid-cols-2">
                   {rentals.map((item) => (
-                    <button
+                    <div
                       key={item.id}
-                      type="button"
-                      onClick={() => toggleRental(item.id)}
                       className={`rounded-xl border p-3 text-left text-sm transition-all ${
                         selectedRentals.includes(item.id)
                           ? 'border-stone-900 bg-stone-900 text-white'
-                          : 'border-stone-200 bg-white hover:-translate-y-0.5 hover:border-stone-400'
+                          : 'border-stone-200 bg-white'
                       }`}
                     >
-                      <span className="font-medium">{item.name}</span>
-                      <p className={`mt-1 text-xs ${selectedRentals.includes(item.id) ? 'text-stone-200' : 'text-muted-foreground'}`}>
-                        ₦{Number(item.pricePerDay).toLocaleString()} / day
-                      </p>
-                    </button>
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <span className="font-medium">{item.name}</span>
+                          <p className={`mt-1 text-xs ${selectedRentals.includes(item.id) ? 'text-stone-200' : 'text-muted-foreground'}`}>
+                            ₦{Number(item.pricePerDay).toLocaleString()} / day
+                          </p>
+                        </div>
+
+                        {selectedRentals.includes(item.id) ? (
+                          <div className="flex items-center gap-2">
+                            <span className="rounded-full border border-white/40 px-2 py-0.5 text-[10px] uppercase tracking-[0.2em] text-stone-200">
+                              Selected
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => removeRental(item.id)}
+                              className="rounded-md border border-stone-400 px-2 py-1 text-[11px] text-stone-200 hover:border-stone-200"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => addRental(item.id)}
+                            className="rounded-md border border-stone-300 px-2 py-1 text-[11px] text-stone-700 hover:border-stone-500"
+                          >
+                            Add piece
+                          </button>
+                        )}
+                      </div>
+
+                      {selectedRentals.includes(item.id) && item.sizes.length > 0 ? (
+                        <div className="mt-3 space-y-2">
+                          <p className="text-[11px] uppercase tracking-[0.2em] text-stone-300">Select size</p>
+                          <select
+                            value={selectedRentalSizes[item.id] ?? ''}
+                            onChange={(e) => selectRentalSize(item.id, e.target.value)}
+                            className="h-9 w-full rounded-md border border-stone-300 bg-white px-2 text-xs text-stone-900"
+                          >
+                            {item.sizes.map((size) => (
+                              <option key={size} value={size}>
+                                {size}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      ) : null}
+                    </div>
                   ))}
                 </div>
               </div>
@@ -474,7 +595,12 @@ export function BookingWizard({ rentals }: BookingWizardProps) {
                 <span className="font-medium">Rental items:</span>{' '}
                 {selectedRentals.length > 0
                   ? selectedRentals
-                      .map((id) => rentals.find((item) => item.id === id)?.name ?? id)
+                      .map((id) => {
+                        const rental = rentals.find((item) => item.id === id);
+                        const size = selectedRentalSizes[id];
+                        const label = rental?.name ?? id;
+                        return size ? `${label} (${size})` : label;
+                      })
                       .join(', ')
                   : 'None selected'}
               </p>
@@ -494,8 +620,8 @@ export function BookingWizard({ rentals }: BookingWizardProps) {
         <div className="flex items-center justify-between">
           <Button
             variant="outline"
-            onClick={() => setStep((s) => Math.max(0, s - 1))}
-            disabled={step === 0}
+            onClick={() => setStep((s) => Math.max(minStep, s - 1))}
+            disabled={step === minStep}
           >
             Back
           </Button>

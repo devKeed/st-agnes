@@ -15,6 +15,8 @@ export default async function BookingConfirmPage({ searchParams }: Props) {
   const resolved = await searchParams;
   const manageToken = resolved.manageToken;
   const manageUrl = resolved.manageUrl;
+  const manageHref =
+    manageUrl ?? (manageToken ? `/booking-manage/${encodeURIComponent(manageToken)}` : undefined);
 
   return (
     <section className="mx-auto w-full max-w-[1440px] px-5 py-24 md:px-10 md:py-32">
@@ -27,22 +29,16 @@ export default async function BookingConfirmPage({ searchParams }: Props) {
           Your request has been <em className="italic">received.</em>
         </h1>
         <p className="mt-6 text-base leading-relaxed text-muted-foreground">
-          Our studio will be in touch shortly to confirm your appointment. Keep your manage
-          link safe to reschedule or cancel according to studio policy.
+          Our studio will be in touch shortly to confirm your appointment.
         </p>
 
-        {manageToken ? (
-          <div className="mt-8 border border-border/60 bg-surface/50 p-5 text-left">
-            <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
-              Manage token
-            </p>
-            <p className="mt-2 break-all font-mono text-sm text-foreground">{manageToken}</p>
-          </div>
-        ) : null}
+        <p className="mt-4 text-sm text-muted-foreground">
+          Use <span className="font-medium text-foreground">Manage this booking</span> to reschedule or cancel later.
+        </p>
 
         <div className="mt-10 flex flex-wrap justify-center gap-4">
-          {manageUrl ? (
-            <Link href={manageUrl} className="btn-premium">Manage this booking</Link>
+          {manageHref ? (
+            <Link href={manageHref} className="btn-premium">Manage this booking</Link>
           ) : null}
           <Link href="/" className="btn-ghost-premium">Back home</Link>
           <Link
