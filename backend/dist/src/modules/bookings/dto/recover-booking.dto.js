@@ -9,16 +9,16 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.RecoverBookingAccessDto = void 0;
+exports.RecoverBookingDto = void 0;
 const class_validator_1 = require("class-validator");
 const swagger_1 = require("@nestjs/swagger");
-class RecoverBookingAccessDto {
-    clientEmail;
+class RecoverBookingDto {
+    email;
 }
-exports.RecoverBookingAccessDto = RecoverBookingAccessDto;
+exports.RecoverBookingDto = RecoverBookingDto;
 __decorate([
     (0, swagger_1.ApiProperty)({ example: 'jane@example.com' }),
     (0, class_validator_1.IsEmail)(),
     __metadata("design:type", String)
-], RecoverBookingAccessDto.prototype, "clientEmail", void 0);
-//# sourceMappingURL=recover-booking-access.dto.js.map
+], RecoverBookingDto.prototype, "email", void 0);
+//# sourceMappingURL=recover-booking.dto.js.map

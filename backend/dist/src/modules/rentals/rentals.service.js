@@ -36,6 +36,7 @@ let RentalsService = RentalsService_1 = class RentalsService {
                 imagePublicIds: dto.imagePublicIds,
                 status: dto.status ?? client_1.RentalStatus.AVAILABLE,
                 isVisible: dto.isVisible ?? true,
+                quantity: dto.quantity ?? 1,
                 sortOrder: dto.sortOrder ?? 0,
             },
         });
@@ -63,15 +64,39 @@ let RentalsService = RentalsService_1 = class RentalsService {
             }),
             this.prisma.rentalProduct.count({ where }),
         ]);
-        return {
-            data,
-            meta: {
-                total,
-                page,
-                limit,
-                totalPages: Math.max(1, Math.ceil(total / limit)),
-            },
+        const meta = {
+            total,
+            page,
+            limit,
+            totalPages: Math.max(1, Math.ceil(total / limit)),
         };
+        if (query.startTime) {
+            const start = new Date(query.startTime);
+            const ids = data.map((p) => p.id);
+            const counts = await this.prisma.bookingItem.groupBy({
+                by: ['rentalProductId'],
+                where: {
+                    rentalProductId: { in: ids },
+                    booking: {
+                        status: client_1.BookingStatus.CONFIRMED,
+                        AND: [
+                            { startTime: { lt: start } },
+                            { endTime: { gt: start } },
+                        ],
+                    },
+                },
+                _count: { rentalProductId: true },
+            });
+            const countMap = new Map(counts.map((c) => [c.rentalProductId, c._count.rentalProductId]));
+            return {
+                data: data.map((p) => ({
+                    ...p,
+                    availableCount: Math.max(0, p.quantity - (countMap.get(p.id) ?? 0)),
+                })),
+                meta,
+            };
+        }
+        return { data, meta };
     }
     async findOne(id, options) {
         const rental = await this.prisma.rentalProduct.findUnique({ where: { id } });
@@ -111,6 +136,7 @@ let RentalsService = RentalsService_1 = class RentalsService {
                 : {}),
             ...(dto.status !== undefined ? { status: dto.status } : {}),
             ...(dto.isVisible !== undefined ? { isVisible: dto.isVisible } : {}),
+            ...(dto.quantity !== undefined ? { quantity: dto.quantity } : {}),
             ...(dto.sortOrder !== undefined ? { sortOrder: dto.sortOrder } : {}),
         };
         return this.prisma.rentalProduct.update({ where: { id }, data });

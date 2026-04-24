@@ -15,6 +15,7 @@ import { EmailService } from '../email/email.service';
 import {
   CreateBookingDto,
   QueryBookingsDto,
+  RecoverBookingDto,
   RescheduleBookingDto,
   UpdateBookingStatusDto,
 } from './dto';
@@ -110,9 +111,17 @@ export class BookingsService {
           const product = await tx.rentalProduct.findUnique({
             where: { id: item.rentalProductId },
           });
-          if (!product || product.status !== RentalStatus.AVAILABLE) {
+          if (!product || !product.isVisible) {
             throw new ConflictException(
               `Rental item ${item.rentalProductId} is not available.`,
+            );
+          }
+          if (
+            product.status === RentalStatus.MAINTENANCE ||
+            product.status === RentalStatus.RETIRED
+          ) {
+            throw new ConflictException(
+              `Rental item ${item.rentalProductId} is not currently available.`,
             );
           }
           if (item.selectedSize && !product.sizes.includes(item.selectedSize)) {
@@ -120,8 +129,9 @@ export class BookingsService {
               `Size '${item.selectedSize}' is not available for rental item ${item.rentalProductId}.`,
             );
           }
-          // Check no other CONFIRMED booking already has this item on an overlapping date
-          const itemConflict = await tx.bookingItem.findFirst({
+          // Count how many confirmed bookings already hold this item in the requested window.
+          // Block only when all units are taken (booked >= quantity).
+          const overlappingCount = await tx.bookingItem.count({
             where: {
               rentalProductId: item.rentalProductId,
               booking: {
@@ -133,9 +143,9 @@ export class BookingsService {
               },
             },
           });
-          if (itemConflict) {
+          if (overlappingCount >= product.quantity) {
             throw new ConflictException(
-              `Rental item ${item.rentalProductId} is already booked for the requested time.`,
+              `Rental item ${item.rentalProductId} is fully booked for the requested time.`,
             );
           }
         }
@@ -183,6 +193,30 @@ export class BookingsService {
 
     const manageUrl = `${frontendUrl}/booking-manage/${manageToken}`;
     return { booking, manageUrl };
+  }
+
+  // ─── Public: recover bookings by email ──────────────────────────────────────
+
+  async recoverBookings(dto: RecoverBookingDto): Promise<void> {
+    // Always return silently — never leak whether bookings exist for an email.
+    const bookings = await this.prisma.booking.findMany({
+      where: {
+        clientEmail: { equals: dto.email, mode: 'insensitive' },
+        status: { notIn: [BookingStatus.CANCELLED, BookingStatus.COMPLETED] },
+      },
+      select: {
+        id: true,
+        clientName: true,
+        manageToken: true,
+        serviceType: true,
+        startTime: true,
+      },
+      orderBy: { startTime: 'asc' },
+    });
+
+    if (bookings.length === 0) return;
+
+    void this.emailService.sendRecovery(dto.email, bookings);
   }
 
   // ─── Public: manage via token ────────────────────────────────────────────────

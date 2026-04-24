@@ -4,10 +4,12 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { RESEND } from './resend.provider';
 import type { ResendClient } from './resend.provider';
 import {
+  RecoveryEmailContext,
   RenderedEmail,
   TemplateContext,
   renderCancellation,
   renderConfirmation,
+  renderRecovery,
   renderReminder,
   renderReschedule,
 } from './templates';
@@ -39,6 +41,19 @@ export class EmailService {
     void this.deliverForBooking(bookingId, EmailType.RESCHEDULE, renderReschedule);
   }
 
+  sendRecovery(
+    recipientEmail: string,
+    bookings: Array<{
+      id: string;
+      clientName: string;
+      manageToken: string;
+      serviceType: import('@prisma/client').ServiceType;
+      startTime: Date;
+    }>,
+  ): void {
+    void this.deliverRecovery(recipientEmail, bookings);
+  }
+
   // ─── Awaitable variant used by the cron reminder job ────────────────────────
 
   async sendReminderAwaitable(bookingId: string): Promise<boolean> {
@@ -46,6 +61,60 @@ export class EmailService {
   }
 
   // ─── Internal ───────────────────────────────────────────────────────────────
+
+  private async deliverRecovery(
+    recipientEmail: string,
+    bookings: Array<{
+      id: string;
+      clientName: string;
+      manageToken: string;
+      serviceType: import('@prisma/client').ServiceType;
+      startTime: Date;
+    }>,
+  ): Promise<void> {
+    const frontendUrl = process.env.FRONTEND_URL ?? 'http://localhost:3000';
+    const from = process.env.EMAIL_FROM ?? 'St Agnes <bookings@stagnes.com>';
+
+    const [emailContent, phoneContent] = await Promise.all([
+      this.prisma.siteContent.findUnique({ where: { pageKey: 'contact_email' } }),
+      this.prisma.siteContent.findUnique({ where: { pageKey: 'contact_phone' } }),
+    ]);
+
+    const ctx: RecoveryEmailContext = {
+      clientName: bookings[0].clientName,
+      bookings: bookings.map((b) => ({
+        manageUrl: `${frontendUrl}/booking-manage/${b.manageToken}`,
+        serviceType: b.serviceType,
+        startTime: b.startTime,
+      })),
+      contactEmail: emailContent?.value,
+      contactPhone: phoneContent?.value,
+    };
+
+    const rendered = renderRecovery(ctx);
+
+    try {
+      if (!this.resend) throw new Error('RESEND_API_KEY is not configured');
+
+      const { error } = await this.resend.emails.send({
+        from,
+        to: [recipientEmail],
+        subject: rendered.subject,
+        html: rendered.html,
+      });
+
+      if (error) {
+        throw new Error(
+          typeof error === 'string' ? error : (error.message ?? JSON.stringify(error)),
+        );
+      }
+
+      this.logger.log(`Recovery email sent to ${recipientEmail} (${bookings.length} booking(s))`);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      this.logger.warn(`Recovery email failed to ${recipientEmail}: ${message}`);
+    }
+  }
 
   private async deliverForBooking(
     bookingId: string,

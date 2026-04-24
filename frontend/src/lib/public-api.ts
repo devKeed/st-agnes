@@ -20,6 +20,8 @@ export interface RentalRow {
   sizes: string[];
   pricePerDay: string | number;
   imageUrls: string[];
+  quantity?: number;
+  availableCount?: number;
 }
 
 export interface Paginated<T> {
@@ -113,8 +115,10 @@ export function getPublicGallery(category?: 'COLLECTION' | 'MUSE') {
   return publicGet<GalleryRow[]>(`/gallery${query}`, 120);
 }
 
-export function getPublicRentals() {
-  return publicGet<Paginated<RentalRow>>('/rentals?page=1&limit=24', 120);
+export function getPublicRentals(startTime?: string) {
+  const params = new URLSearchParams({ page: '1', limit: '24' });
+  if (startTime) params.set('startTime', startTime);
+  return publicGet<Paginated<RentalRow>>(`/rentals?${params.toString()}`, startTime ? 0 : 120);
 }
 
 export function getPublicRental(id: string) {
@@ -157,4 +161,8 @@ export function cancelBookingByToken(token: string, reason?: string) {
 
 export function rescheduleBookingByToken(token: string, startTime: string) {
   return publicMutate(`/bookings/manage/${token}/reschedule`, 'PATCH', { startTime });
+}
+
+export function recoverBooking(email: string): Promise<void> {
+  return publicMutate<void>('/bookings/recover', 'POST', { email });
 }

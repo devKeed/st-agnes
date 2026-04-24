@@ -39,8 +39,48 @@ let EmailService = EmailService_1 = class EmailService {
     sendReschedule(bookingId) {
         void this.deliverForBooking(bookingId, client_1.EmailType.RESCHEDULE, templates_1.renderReschedule);
     }
+    sendRecovery(recipientEmail, bookings) {
+        void this.deliverRecovery(recipientEmail, bookings);
+    }
     async sendReminderAwaitable(bookingId) {
         return this.deliverForBooking(bookingId, client_1.EmailType.REMINDER, templates_1.renderReminder);
+    }
+    async deliverRecovery(recipientEmail, bookings) {
+        const frontendUrl = process.env.FRONTEND_URL ?? 'http://localhost:3000';
+        const from = process.env.EMAIL_FROM ?? 'St Agnes <bookings@stagnes.com>';
+        const [emailContent, phoneContent] = await Promise.all([
+            this.prisma.siteContent.findUnique({ where: { pageKey: 'contact_email' } }),
+            this.prisma.siteContent.findUnique({ where: { pageKey: 'contact_phone' } }),
+        ]);
+        const ctx = {
+            clientName: bookings[0].clientName,
+            bookings: bookings.map((b) => ({
+                manageUrl: `${frontendUrl}/booking-manage/${b.manageToken}`,
+                serviceType: b.serviceType,
+                startTime: b.startTime,
+            })),
+            contactEmail: emailContent?.value,
+            contactPhone: phoneContent?.value,
+        };
+        const rendered = (0, templates_1.renderRecovery)(ctx);
+        try {
+            if (!this.resend)
+                throw new Error('RESEND_API_KEY is not configured');
+            const { error } = await this.resend.emails.send({
+                from,
+                to: [recipientEmail],
+                subject: rendered.subject,
+                html: rendered.html,
+            });
+            if (error) {
+                throw new Error(typeof error === 'string' ? error : (error.message ?? JSON.stringify(error)));
+            }
+            this.logger.log(`Recovery email sent to ${recipientEmail} (${bookings.length} booking(s))`);
+        }
+        catch (err) {
+            const message = err instanceof Error ? err.message : String(err);
+            this.logger.warn(`Recovery email failed to ${recipientEmail}: ${message}`);
+        }
     }
     async deliverForBooking(bookingId, type, render) {
         const booking = await this.prisma.booking.findUnique({

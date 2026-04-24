@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
@@ -123,6 +124,13 @@ export function ManageBookingClient({ token }: ManageBookingClientProps) {
           </div>
         </div>
       ) : null}
+
+      <p className="mt-6 text-xs text-muted-foreground">
+        Looking for a different booking?{' '}
+        <Link href="/booking/recover" className="underline underline-offset-2 hover:text-foreground">
+          Find my booking
+        </Link>
+      </p>
     </div>
   );
 }

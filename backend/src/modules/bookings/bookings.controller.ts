@@ -17,6 +17,7 @@ import { BookingsService } from './bookings.service';
 import {
   CreateBookingDto,
   QueryBookingsDto,
+  RecoverBookingDto,
   RescheduleBookingDto,
   UpdateBookingStatusDto,
 } from './dto';
@@ -78,6 +79,17 @@ export class BookingsController {
     @Body() dto: RescheduleBookingDto,
   ) {
     return this.bookingsService.rescheduleByToken(token, dto);
+  }
+
+  @Public()
+  @Post('recover')
+  @HttpCode(HttpStatus.ACCEPTED)
+  @ApiOperation({
+    summary:
+      'Request booking recovery email (public). Always returns 202 — never reveals whether bookings exist.',
+  })
+  recoverBookings(@Body() dto: RecoverBookingDto) {
+    return this.bookingsService.recoverBookings(dto);
   }
 
   // ─── Admin ───────────────────────────────────────────────────────────────────

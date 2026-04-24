@@ -68,7 +68,10 @@ export default async function BookingPage({ searchParams }: Props) {
       </section>
 
       {/* WIZARD */}
-      <section className="mx-auto w-full max-w-[1440px] px-5 py-16 md:px-10 md:py-20">
+      <section
+        id="book-consultation"
+        className="mx-auto w-full max-w-[1440px] scroll-mt-24 px-5 py-16 md:px-10 md:py-20"
+      >
         <BookingWizard
           rentals={rentalsData}
           initialService={initialService}

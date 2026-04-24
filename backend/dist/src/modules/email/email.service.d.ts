@@ -9,7 +9,15 @@ export declare class EmailService {
     sendReminder(bookingId: string): void;
     sendCancellation(bookingId: string): void;
     sendReschedule(bookingId: string): void;
+    sendRecovery(recipientEmail: string, bookings: Array<{
+        id: string;
+        clientName: string;
+        manageToken: string;
+        serviceType: import('@prisma/client').ServiceType;
+        startTime: Date;
+    }>): void;
     sendReminderAwaitable(bookingId: string): Promise<boolean>;
+    private deliverRecovery;
     private deliverForBooking;
     private buildContext;
 }

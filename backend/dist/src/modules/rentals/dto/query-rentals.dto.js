@@ -18,6 +18,7 @@ class QueryRentalsDto extends dto_1.PaginationDto {
     status;
     includeHidden;
     search;
+    startTime;
 }
 exports.QueryRentalsDto = QueryRentalsDto;
 __decorate([
@@ -40,4 +41,12 @@ __decorate([
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], QueryRentalsDto.prototype, "search", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'ISO date-time. When provided, annotates results with availableCount for this time window.',
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsDateString)(),
+    __metadata("design:type", String)
+], QueryRentalsDto.prototype, "startTime", void 0);
 //# sourceMappingURL=query-rentals.dto.js.map

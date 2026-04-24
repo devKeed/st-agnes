@@ -9,5 +9,6 @@ export declare class CreateRentalDto {
     imagePublicIds: string[];
     status?: RentalStatus;
     isVisible?: boolean;
+    quantity?: number;
     sortOrder?: number;
 }

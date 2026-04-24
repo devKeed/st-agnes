@@ -1,5 +1,5 @@
 import { BookingsService } from './bookings.service';
-import { CreateBookingDto, QueryBookingsDto, RescheduleBookingDto, UpdateBookingStatusDto } from './dto';
+import { CreateBookingDto, QueryBookingsDto, RecoverBookingDto, RescheduleBookingDto, UpdateBookingStatusDto } from './dto';
 export declare class BookingsController {
     private readonly bookingsService;
     constructor(bookingsService: BookingsService);
@@ -16,11 +16,11 @@ export declare class BookingsController {
     getByToken(token: string): Promise<{
         bookingItems: ({
             rentalProduct: {
-                name: string;
                 id: string;
+                updatedAt: Date;
+                name: string;
                 status: import("@prisma/client").$Enums.RentalStatus;
                 createdAt: Date;
-                updatedAt: Date;
                 description: string | null;
                 sizes: string[];
                 pricePerDay: import("@prisma/client-runtime-utils").Decimal;
@@ -33,12 +33,14 @@ export declare class BookingsController {
         } & {
             id: string;
             createdAt: Date;
+            bookingId: string;
             selectedSize: string | null;
             rentalProductId: string;
-            bookingId: string;
         })[];
     } & {
         id: string;
+        updatedAt: Date;
+        manageToken: string;
         clientName: string;
         clientEmail: string;
         clientPhone: string | null;
@@ -49,25 +51,23 @@ export declare class BookingsController {
         notes: string | null;
         specialRequests: string | null;
         status: import("@prisma/client").$Enums.BookingStatus;
-        manageToken: string;
         googleEventId: string | null;
         termsVersionId: string | null;
         termsAccepted: boolean;
         termsAcceptedAt: Date | null;
         cancellationReason: string | null;
         createdAt: Date;
-        updatedAt: Date;
     }>;
     cancelByToken(token: string, body: {
         reason?: string;
     }): Promise<{
         bookingItems: ({
             rentalProduct: {
-                name: string;
                 id: string;
+                updatedAt: Date;
+                name: string;
                 status: import("@prisma/client").$Enums.RentalStatus;
                 createdAt: Date;
-                updatedAt: Date;
                 description: string | null;
                 sizes: string[];
                 pricePerDay: import("@prisma/client-runtime-utils").Decimal;
@@ -80,12 +80,14 @@ export declare class BookingsController {
         } & {
             id: string;
             createdAt: Date;
+            bookingId: string;
             selectedSize: string | null;
             rentalProductId: string;
-            bookingId: string;
         })[];
     } & {
         id: string;
+        updatedAt: Date;
+        manageToken: string;
         clientName: string;
         clientEmail: string;
         clientPhone: string | null;
@@ -96,23 +98,21 @@ export declare class BookingsController {
         notes: string | null;
         specialRequests: string | null;
         status: import("@prisma/client").$Enums.BookingStatus;
-        manageToken: string;
         googleEventId: string | null;
         termsVersionId: string | null;
         termsAccepted: boolean;
         termsAcceptedAt: Date | null;
         cancellationReason: string | null;
         createdAt: Date;
-        updatedAt: Date;
     }>;
     rescheduleByToken(token: string, dto: RescheduleBookingDto): Promise<{
         bookingItems: ({
             rentalProduct: {
-                name: string;
                 id: string;
+                updatedAt: Date;
+                name: string;
                 status: import("@prisma/client").$Enums.RentalStatus;
                 createdAt: Date;
-                updatedAt: Date;
                 description: string | null;
                 sizes: string[];
                 pricePerDay: import("@prisma/client-runtime-utils").Decimal;
@@ -125,12 +125,14 @@ export declare class BookingsController {
         } & {
             id: string;
             createdAt: Date;
+            bookingId: string;
             selectedSize: string | null;
             rentalProductId: string;
-            bookingId: string;
         })[];
     } & {
         id: string;
+        updatedAt: Date;
+        manageToken: string;
         clientName: string;
         clientEmail: string;
         clientPhone: string | null;
@@ -141,23 +143,22 @@ export declare class BookingsController {
         notes: string | null;
         specialRequests: string | null;
         status: import("@prisma/client").$Enums.BookingStatus;
-        manageToken: string;
         googleEventId: string | null;
         termsVersionId: string | null;
         termsAccepted: boolean;
         termsAcceptedAt: Date | null;
         cancellationReason: string | null;
         createdAt: Date;
-        updatedAt: Date;
     }>;
+    recoverBookings(dto: RecoverBookingDto): Promise<void>;
     listAll(query: QueryBookingsDto): Promise<import("../../common/dto").PaginatedResponse<{
         bookingItems: ({
             rentalProduct: {
-                name: string;
                 id: string;
+                updatedAt: Date;
+                name: string;
                 status: import("@prisma/client").$Enums.RentalStatus;
                 createdAt: Date;
-                updatedAt: Date;
                 description: string | null;
                 sizes: string[];
                 pricePerDay: import("@prisma/client-runtime-utils").Decimal;
@@ -170,12 +171,14 @@ export declare class BookingsController {
         } & {
             id: string;
             createdAt: Date;
+            bookingId: string;
             selectedSize: string | null;
             rentalProductId: string;
-            bookingId: string;
         })[];
     } & {
         id: string;
+        updatedAt: Date;
+        manageToken: string;
         clientName: string;
         clientEmail: string;
         clientPhone: string | null;
@@ -186,23 +189,21 @@ export declare class BookingsController {
         notes: string | null;
         specialRequests: string | null;
         status: import("@prisma/client").$Enums.BookingStatus;
-        manageToken: string;
         googleEventId: string | null;
         termsVersionId: string | null;
         termsAccepted: boolean;
         termsAcceptedAt: Date | null;
         cancellationReason: string | null;
         createdAt: Date;
-        updatedAt: Date;
     }>>;
     getOne(id: string): Promise<{
         bookingItems: ({
             rentalProduct: {
-                name: string;
                 id: string;
+                updatedAt: Date;
+                name: string;
                 status: import("@prisma/client").$Enums.RentalStatus;
                 createdAt: Date;
-                updatedAt: Date;
                 description: string | null;
                 sizes: string[];
                 pricePerDay: import("@prisma/client-runtime-utils").Decimal;
@@ -215,12 +216,14 @@ export declare class BookingsController {
         } & {
             id: string;
             createdAt: Date;
+            bookingId: string;
             selectedSize: string | null;
             rentalProductId: string;
-            bookingId: string;
         })[];
     } & {
         id: string;
+        updatedAt: Date;
+        manageToken: string;
         clientName: string;
         clientEmail: string;
         clientPhone: string | null;
@@ -231,23 +234,21 @@ export declare class BookingsController {
         notes: string | null;
         specialRequests: string | null;
         status: import("@prisma/client").$Enums.BookingStatus;
-        manageToken: string;
         googleEventId: string | null;
         termsVersionId: string | null;
         termsAccepted: boolean;
         termsAcceptedAt: Date | null;
         cancellationReason: string | null;
         createdAt: Date;
-        updatedAt: Date;
     }>;
     updateStatus(id: string, dto: UpdateBookingStatusDto): Promise<{
         bookingItems: ({
             rentalProduct: {
-                name: string;
                 id: string;
+                updatedAt: Date;
+                name: string;
                 status: import("@prisma/client").$Enums.RentalStatus;
                 createdAt: Date;
-                updatedAt: Date;
                 description: string | null;
                 sizes: string[];
                 pricePerDay: import("@prisma/client-runtime-utils").Decimal;
@@ -260,12 +261,14 @@ export declare class BookingsController {
         } & {
             id: string;
             createdAt: Date;
+            bookingId: string;
             selectedSize: string | null;
             rentalProductId: string;
-            bookingId: string;
         })[];
     } & {
         id: string;
+        updatedAt: Date;
+        manageToken: string;
         clientName: string;
         clientEmail: string;
         clientPhone: string | null;
@@ -276,13 +279,11 @@ export declare class BookingsController {
         notes: string | null;
         specialRequests: string | null;
         status: import("@prisma/client").$Enums.BookingStatus;
-        manageToken: string;
         googleEventId: string | null;
         termsVersionId: string | null;
         termsAccepted: boolean;
         termsAcceptedAt: Date | null;
         cancellationReason: string | null;
         createdAt: Date;
-        updatedAt: Date;
     }>;
 }

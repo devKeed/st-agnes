@@ -11,6 +11,7 @@ import {
   createBooking,
   getActiveTerms,
   getMonthAvailability,
+  getPublicRentals,
   type AvailabilityDay,
   type CreateBookingPayload,
   type RentalRow,
@@ -128,6 +129,28 @@ export function BookingWizard({
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [rentalsWithAvailability, setRentalsWithAvailability] = useState<RentalRow[]>(rentals);
+
+  // Re-fetch rentals with availability counts whenever the user picks a time slot
+  useEffect(() => {
+    if (service !== 'RENTAL' || !time) {
+      setRentalsWithAvailability(rentals);
+      return;
+    }
+    let active = true;
+    async function fetchAvailability() {
+      try {
+        const result = await getPublicRentals(time);
+        if (active) setRentalsWithAvailability(result.data);
+      } catch {
+        // keep showing base list on error
+      }
+    }
+    void fetchAvailability();
+    return () => {
+      active = false;
+    };
+  }, [service, time, rentals]);
 
   useEffect(() => {
     let active = true;
@@ -195,7 +218,7 @@ export function BookingWizard({
       if (service === 'RENTAL') {
         if (selectedRentals.length === 0) return false;
         return selectedRentals.every((id) => {
-          const rental = rentals.find((item) => item.id === id);
+          const rental = rentalsWithAvailability.find((item) => item.id === id);
           if (!rental || rental.sizes.length === 0) return true;
           return Boolean(selectedRentalSizes[id]);
         });
@@ -205,10 +228,10 @@ export function BookingWizard({
     if (step === 2) return Boolean(name && email);
     if (step === 3) return termsAccepted;
     return false;
-  }, [step, service, date, time, selectedRentals, selectedRentalSizes, rentals, name, email, termsAccepted]);
+  }, [step, service, date, time, selectedRentals, selectedRentalSizes, rentalsWithAvailability, name, email, termsAccepted]);
 
   function getDefaultSize(id: string) {
-    const rental = rentals.find((item) => item.id === id);
+    const rental = rentalsWithAvailability.find((item) => item.id === id);
     return rental?.sizes[0] ?? '';
   }
 
@@ -447,7 +470,7 @@ export function BookingWizard({
                     <p className="mb-2 text-xs font-medium uppercase tracking-[0.2em] text-stone-600">Selected pieces</p>
                     <div className="flex flex-wrap gap-2">
                       {selectedRentals.map((id) => {
-                        const rental = rentals.find((item) => item.id === id);
+                        const rental = rentalsWithAvailability.find((item) => item.id === id);
                         const label = rental?.name ?? id;
                         const size = selectedRentalSizes[id];
 
@@ -473,65 +496,83 @@ export function BookingWizard({
                 ) : null}
 
                 <div className="grid gap-2 md:grid-cols-2">
-                  {rentals.map((item) => (
-                    <div
-                      key={item.id}
-                      className={`rounded-xl border p-3 text-left text-sm transition-all ${
-                        selectedRentals.includes(item.id)
-                          ? 'border-stone-900 bg-stone-900 text-white'
-                          : 'border-stone-200 bg-white'
-                      }`}
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <span className="font-medium">{item.name}</span>
-                          <p className={`mt-1 text-xs ${selectedRentals.includes(item.id) ? 'text-stone-200' : 'text-muted-foreground'}`}>
-                            ₦{Number(item.pricePerDay).toLocaleString()} / day
-                          </p>
-                        </div>
+                  {rentalsWithAvailability.map((item) => {
+                    const isFullyBooked = item.availableCount !== undefined && item.availableCount === 0;
+                    const isSelected = selectedRentals.includes(item.id);
+                    return (
+                      <div
+                        key={item.id}
+                        className={`rounded-xl border p-3 text-left text-sm transition-all ${
+                          isSelected
+                            ? 'border-stone-900 bg-stone-900 text-white'
+                            : isFullyBooked
+                              ? 'border-stone-100 bg-stone-50 opacity-60'
+                              : 'border-stone-200 bg-white'
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <span className="font-medium">{item.name}</span>
+                            <p className={`mt-1 text-xs ${isSelected ? 'text-stone-200' : 'text-muted-foreground'}`}>
+                              ₦{Number(item.pricePerDay).toLocaleString()} / day
+                            </p>
+                            {item.availableCount !== undefined && item.quantity !== undefined && !isSelected ? (
+                              <p className={`mt-0.5 text-[10px] ${isFullyBooked ? 'text-red-500' : 'text-emerald-600'}`}>
+                                {isFullyBooked
+                                  ? 'Fully booked for this slot'
+                                  : `${item.availableCount} of ${item.quantity} available`}
+                              </p>
+                            ) : null}
+                          </div>
 
-                        {selectedRentals.includes(item.id) ? (
-                          <div className="flex items-center gap-2">
-                            <span className="rounded-full border border-white/40 px-2 py-0.5 text-[10px] uppercase tracking-[0.2em] text-stone-200">
-                              Selected
-                            </span>
+                          {isSelected ? (
+                            <div className="flex items-center gap-2">
+                              <span className="rounded-full border border-white/40 px-2 py-0.5 text-[10px] uppercase tracking-[0.2em] text-stone-200">
+                                Selected
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => removeRental(item.id)}
+                                className="rounded-md border border-stone-400 px-2 py-1 text-[11px] text-stone-200 hover:border-stone-200"
+                              >
+                                Remove
+                              </button>
+                            </div>
+                          ) : (
                             <button
                               type="button"
-                              onClick={() => removeRental(item.id)}
-                              className="rounded-md border border-stone-400 px-2 py-1 text-[11px] text-stone-200 hover:border-stone-200"
+                              onClick={() => !isFullyBooked && addRental(item.id)}
+                              disabled={isFullyBooked}
+                              className={`rounded-md border px-2 py-1 text-[11px] ${
+                                isFullyBooked
+                                  ? 'cursor-not-allowed border-stone-200 text-stone-400'
+                                  : 'border-stone-300 text-stone-700 hover:border-stone-500'
+                              }`}
                             >
-                              Remove
+                              {isFullyBooked ? 'Unavailable' : 'Add piece'}
                             </button>
-                          </div>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={() => addRental(item.id)}
-                            className="rounded-md border border-stone-300 px-2 py-1 text-[11px] text-stone-700 hover:border-stone-500"
-                          >
-                            Add piece
-                          </button>
-                        )}
-                      </div>
-
-                      {selectedRentals.includes(item.id) && item.sizes.length > 0 ? (
-                        <div className="mt-3 space-y-2">
-                          <p className="text-[11px] uppercase tracking-[0.2em] text-stone-300">Select size</p>
-                          <select
-                            value={selectedRentalSizes[item.id] ?? ''}
-                            onChange={(e) => selectRentalSize(item.id, e.target.value)}
-                            className="h-9 w-full rounded-md border border-stone-300 bg-white px-2 text-xs text-stone-900"
-                          >
-                            {item.sizes.map((size) => (
-                              <option key={size} value={size}>
-                                {size}
-                              </option>
-                            ))}
-                          </select>
+                          )}
                         </div>
-                      ) : null}
-                    </div>
-                  ))}
+
+                        {isSelected && item.sizes.length > 0 ? (
+                          <div className="mt-3 space-y-2">
+                            <p className="text-[11px] uppercase tracking-[0.2em] text-stone-300">Select size</p>
+                            <select
+                              value={selectedRentalSizes[item.id] ?? ''}
+                              onChange={(e) => selectRentalSize(item.id, e.target.value)}
+                              className="h-9 w-full rounded-md border border-stone-300 bg-white px-2 text-xs text-stone-900"
+                            >
+                              {item.sizes.map((size) => (
+                                <option key={size} value={size}>
+                                  {size}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        ) : null}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}

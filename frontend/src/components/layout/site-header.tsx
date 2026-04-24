@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type MouseEvent } from 'react';
 import { X, CalendarDays } from 'lucide-react';
 
 const primaryLinks = [
@@ -22,6 +22,20 @@ export function SiteHeader() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const bookingHref = '/booking#book-consultation';
+
+  const handleBookConsultationClick = (event: MouseEvent<HTMLAnchorElement>) => {
+    if (pathname !== '/booking') return;
+    event.preventDefault();
+    setOpen(false);
+    const target = document.getElementById('book-consultation');
+    if (target) {
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      window.history.replaceState(null, '', bookingHref);
+      return;
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
@@ -96,13 +110,15 @@ export function SiteHeader() {
 
           <div className="flex items-center justify-end gap-5">
             <Link
-              href="/booking"
+              href={bookingHref}
+              onClick={handleBookConsultationClick}
               className="hidden text-[11px] uppercase tracking-[0.28em] text-muted-foreground transition-colors duration-200 hover:text-foreground md:inline-flex"
             >
               Book consultation
             </Link>
             <Link
-              href="/booking"
+              href={bookingHref}
+              onClick={handleBookConsultationClick}
               aria-label="Book consultation"
               className="inline-flex h-9 w-9 items-center justify-center border border-foreground/70 text-foreground transition-colors hover:bg-foreground hover:text-primary-foreground md:hidden"
             >
@@ -172,7 +188,8 @@ export function SiteHeader() {
                 ))}
               </ul>
               <Link
-                href="/booking"
+                href={bookingHref}
+                onClick={handleBookConsultationClick}
                 className="btn-premium w-full"
               >
                 Book a consultation

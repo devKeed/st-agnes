@@ -71,13 +71,17 @@ let BookingsService = BookingsService_1 = class BookingsService {
                     const product = await tx.rentalProduct.findUnique({
                         where: { id: item.rentalProductId },
                     });
-                    if (!product || product.status !== client_1.RentalStatus.AVAILABLE) {
+                    if (!product || !product.isVisible) {
                         throw new common_1.ConflictException(`Rental item ${item.rentalProductId} is not available.`);
+                    }
+                    if (product.status === client_1.RentalStatus.MAINTENANCE ||
+                        product.status === client_1.RentalStatus.RETIRED) {
+                        throw new common_1.ConflictException(`Rental item ${item.rentalProductId} is not currently available.`);
                     }
                     if (item.selectedSize && !product.sizes.includes(item.selectedSize)) {
                         throw new common_1.BadRequestException(`Size '${item.selectedSize}' is not available for rental item ${item.rentalProductId}.`);
                     }
-                    const itemConflict = await tx.bookingItem.findFirst({
+                    const overlappingCount = await tx.bookingItem.count({
                         where: {
                             rentalProductId: item.rentalProductId,
                             booking: {
@@ -89,8 +93,8 @@ let BookingsService = BookingsService_1 = class BookingsService {
                             },
                         },
                     });
-                    if (itemConflict) {
-                        throw new common_1.ConflictException(`Rental item ${item.rentalProductId} is already booked for the requested time.`);
+                    if (overlappingCount >= product.quantity) {
+                        throw new common_1.ConflictException(`Rental item ${item.rentalProductId} is fully booked for the requested time.`);
                     }
                 }
             }
@@ -128,6 +132,25 @@ let BookingsService = BookingsService_1 = class BookingsService {
         this.emailService.sendConfirmation(booking.id);
         const manageUrl = `${frontendUrl}/booking-manage/${manageToken}`;
         return { booking, manageUrl };
+    }
+    async recoverBookings(dto) {
+        const bookings = await this.prisma.booking.findMany({
+            where: {
+                clientEmail: { equals: dto.email, mode: 'insensitive' },
+                status: { notIn: [client_1.BookingStatus.CANCELLED, client_1.BookingStatus.COMPLETED] },
+            },
+            select: {
+                id: true,
+                clientName: true,
+                manageToken: true,
+                serviceType: true,
+                startTime: true,
+            },
+            orderBy: { startTime: 'asc' },
+        });
+        if (bookings.length === 0)
+            return;
+        void this.emailService.sendRecovery(dto.email, bookings);
     }
     async findByToken(token) {
         const booking = await this.prisma.booking.findUnique({

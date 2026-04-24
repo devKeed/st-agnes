@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.QueryBookingsDto = exports.RescheduleBookingDto = exports.UpdateBookingStatusDto = exports.RentalItemDto = exports.CreateBookingDto = void 0;
+exports.RecoverBookingDto = exports.QueryBookingsDto = exports.RescheduleBookingDto = exports.UpdateBookingStatusDto = exports.RentalItemDto = exports.CreateBookingDto = void 0;
 var create_booking_dto_1 = require("./create-booking.dto");
 Object.defineProperty(exports, "CreateBookingDto", { enumerable: true, get: function () { return create_booking_dto_1.CreateBookingDto; } });
 Object.defineProperty(exports, "RentalItemDto", { enumerable: true, get: function () { return create_booking_dto_1.RentalItemDto; } });
@@ -10,4 +10,6 @@ var reschedule_booking_dto_1 = require("./reschedule-booking.dto");
 Object.defineProperty(exports, "RescheduleBookingDto", { enumerable: true, get: function () { return reschedule_booking_dto_1.RescheduleBookingDto; } });
 var query_bookings_dto_1 = require("./query-bookings.dto");
 Object.defineProperty(exports, "QueryBookingsDto", { enumerable: true, get: function () { return query_bookings_dto_1.QueryBookingsDto; } });
+var recover_booking_dto_1 = require("./recover-booking.dto");
+Object.defineProperty(exports, "RecoverBookingDto", { enumerable: true, get: function () { return recover_booking_dto_1.RecoverBookingDto; } });
 //# sourceMappingURL=index.js.map

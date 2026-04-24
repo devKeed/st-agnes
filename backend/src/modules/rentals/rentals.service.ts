@@ -4,7 +4,7 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
-import { Prisma, RentalProduct, RentalStatus } from '@prisma/client';
+import { BookingStatus, Prisma, RentalProduct, RentalStatus } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { UploadService } from '../upload/upload.service';
 import { CreateRentalDto, QueryRentalsDto, UpdateRentalDto } from './dto';
@@ -33,6 +33,7 @@ export class RentalsService {
         imagePublicIds: dto.imagePublicIds,
         status: dto.status ?? RentalStatus.AVAILABLE,
         isVisible: dto.isVisible ?? true,
+        quantity: dto.quantity ?? 1,
         sortOrder: dto.sortOrder ?? 0,
       },
     });
@@ -41,7 +42,7 @@ export class RentalsService {
   async findAll(
     query: QueryRentalsDto,
     options: { isAdmin: boolean },
-  ): Promise<PaginatedResponse<RentalProduct>> {
+  ): Promise<PaginatedResponse<RentalProduct & { availableCount?: number }>> {
     const page = query.page ?? 1;
     const limit = query.limit ?? 20;
     const includeHidden = options.isAdmin && query.includeHidden === 'true';
@@ -67,15 +68,48 @@ export class RentalsService {
       this.prisma.rentalProduct.count({ where }),
     ]);
 
-    return {
-      data,
-      meta: {
-        total,
-        page,
-        limit,
-        totalPages: Math.max(1, Math.ceil(total / limit)),
-      },
+    const meta = {
+      total,
+      page,
+      limit,
+      totalPages: Math.max(1, Math.ceil(total / limit)),
     };
+
+    // When a startTime is provided, annotate each product with how many units
+    // are still available for that time window (quantity minus booked count).
+    if (query.startTime) {
+      const start = new Date(query.startTime);
+      const ids = data.map((p) => p.id);
+
+      const counts = await this.prisma.bookingItem.groupBy({
+        by: ['rentalProductId'],
+        where: {
+          rentalProductId: { in: ids },
+          booking: {
+            status: BookingStatus.CONFIRMED,
+            AND: [
+              { startTime: { lt: start } },
+              { endTime: { gt: start } },
+            ],
+          },
+        },
+        _count: { rentalProductId: true },
+      });
+
+      const countMap = new Map(
+        counts.map((c) => [c.rentalProductId, c._count.rentalProductId]),
+      );
+
+      return {
+        data: data.map((p) => ({
+          ...p,
+          availableCount: Math.max(0, p.quantity - (countMap.get(p.id) ?? 0)),
+        })),
+        meta,
+      };
+    }
+
+    return { data, meta };
   }
 
   async findOne(
@@ -123,6 +157,7 @@ export class RentalsService {
         : {}),
       ...(dto.status !== undefined ? { status: dto.status } : {}),
       ...(dto.isVisible !== undefined ? { isVisible: dto.isVisible } : {}),
+      ...(dto.quantity !== undefined ? { quantity: dto.quantity } : {}),
       ...(dto.sortOrder !== undefined ? { sortOrder: dto.sortOrder } : {}),
     };
 

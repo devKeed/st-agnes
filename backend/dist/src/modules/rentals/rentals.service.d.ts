@@ -11,7 +11,9 @@ export declare class RentalsService {
     create(dto: CreateRentalDto): Promise<RentalProduct>;
     findAll(query: QueryRentalsDto, options: {
         isAdmin: boolean;
-    }): Promise<PaginatedResponse<RentalProduct>>;
+    }): Promise<PaginatedResponse<RentalProduct & {
+        availableCount?: number;
+    }>>;
     findOne(id: string, options: {
         isAdmin: boolean;
     }): Promise<RentalProduct>;

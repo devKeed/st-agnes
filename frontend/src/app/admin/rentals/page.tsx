@@ -25,6 +25,7 @@ interface RentalProduct {
   imagePublicIds: string[];
   status: RentalStatus;
   isVisible: boolean;
+  quantity: number;
   sortOrder: number;
 }
 
@@ -46,6 +47,7 @@ export default function AdminRentalsPage() {
   const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
   const [pricePerDay, setPricePerDay] = useState('0');
   const [depositAmount, setDepositAmount] = useState('0');
+  const [quantity, setQuantity] = useState('1');
   const [imageUrl, setImageUrl] = useState('');
   const [imagePublicId, setImagePublicId] = useState('');
   const [isUploadingImage, setIsUploadingImage] = useState(false);
@@ -76,6 +78,7 @@ export default function AdminRentalsPage() {
           imagePublicIds: [imagePublicId.trim()],
           status: 'AVAILABLE',
           isVisible: true,
+          quantity: Number(quantity) || 1,
           sortOrder: 0,
         },
       }),
@@ -86,6 +89,7 @@ export default function AdminRentalsPage() {
       setSelectedSizes([]);
       setPricePerDay('0');
       setDepositAmount('0');
+      setQuantity('1');
       setImageUrl('');
       setImagePublicId('');
       void queryClient.invalidateQueries({ queryKey: ['rentals'] });
@@ -217,6 +221,17 @@ export default function AdminRentalsPage() {
                 onChange={(e) => setDepositAmount(e.target.value)}
               />
             </div>
+            <div>
+              <label className="mb-1 block text-xs text-muted-foreground">Quantity (units owned)</label>
+              <Input
+                type="number"
+                min="1"
+                max="100"
+                placeholder="1"
+                value={quantity}
+                onChange={(e) => setQuantity(e.target.value)}
+              />
+            </div>
             <div className="md:col-span-2">
               <label className="mb-1 block text-xs text-muted-foreground">Image file</label>
               <Input
@@ -288,6 +303,7 @@ export default function AdminRentalsPage() {
                   <tr>
                     <th className="px-6 py-3 font-medium">Item</th>
                     <th className="px-6 py-3 font-medium">Pricing</th>
+                    <th className="px-6 py-3 font-medium">Qty</th>
                     <th className="px-6 py-3 font-medium">Status</th>
                     <th className="px-6 py-3 font-medium">Actions</th>
                   </tr>
@@ -311,6 +327,37 @@ export default function AdminRentalsPage() {
                           ₦{Number(rental.pricePerDay).toLocaleString()} / day
                           <div className="text-xs text-muted-foreground">
                             Deposit: ₦{Number(rental.depositAmount).toLocaleString()}
+                          </div>
+                        </td>
+                        <td className="px-6 py-3 align-top">
+                          <div className="flex items-center gap-1">
+                            <button
+                              type="button"
+                              disabled={isBusy || rental.quantity <= 1}
+                              onClick={() =>
+                                updateMutation.mutate({
+                                  id: rental.id,
+                                  body: { quantity: Math.max(1, rental.quantity - 1) } as Partial<RentalProduct>,
+                                })
+                              }
+                              className="flex h-6 w-6 items-center justify-center rounded border text-xs disabled:opacity-40"
+                            >
+                              −
+                            </button>
+                            <span className="w-6 text-center text-sm font-medium">{rental.quantity}</span>
+                            <button
+                              type="button"
+                              disabled={isBusy || rental.quantity >= 100}
+                              onClick={() =>
+                                updateMutation.mutate({
+                                  id: rental.id,
+                                  body: { quantity: rental.quantity + 1 } as Partial<RentalProduct>,
+                                })
+                              }
+                              className="flex h-6 w-6 items-center justify-center rounded border text-xs disabled:opacity-40"
+                            >
+                              +
+                            </button>
                           </div>
                         </td>
                         <td className="px-6 py-3 align-top">

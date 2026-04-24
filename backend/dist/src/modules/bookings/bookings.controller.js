@@ -46,6 +46,9 @@ let BookingsController = class BookingsController {
     rescheduleByToken(token, dto) {
         return this.bookingsService.rescheduleByToken(token, dto);
     }
+    recoverBookings(dto) {
+        return this.bookingsService.recoverBookings(dto);
+    }
     listAll(query) {
         return this.bookingsService.findAll(query);
     }
@@ -101,6 +104,18 @@ __decorate([
     __metadata("design:paramtypes", [String, dto_1.RescheduleBookingDto]),
     __metadata("design:returntype", void 0)
 ], BookingsController.prototype, "rescheduleByToken", null);
+__decorate([
+    (0, decorators_1.Public)(),
+    (0, common_1.Post)('recover'),
+    (0, common_1.HttpCode)(common_1.HttpStatus.ACCEPTED),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Request booking recovery email (public). Always returns 202 — never reveals whether bookings exist.',
+    }),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [dto_1.RecoverBookingDto]),
+    __metadata("design:returntype", void 0)
+], BookingsController.prototype, "recoverBookings", null);
 __decorate([
     (0, common_1.Get)(),
     (0, decorators_1.Roles)(client_1.AdminRole.SUPER_ADMIN, client_1.AdminRole.ADMIN),

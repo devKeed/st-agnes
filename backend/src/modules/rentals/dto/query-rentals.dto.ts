@@ -1,4 +1,4 @@
-import { IsBooleanString, IsEnum, IsOptional, IsString } from 'class-validator';
+import { IsBooleanString, IsDateString, IsEnum, IsOptional, IsString } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { RentalStatus } from '@prisma/client';
 import { PaginationDto } from '../../../common/dto';
@@ -20,4 +20,11 @@ export class QueryRentalsDto extends PaginationDto {
   @IsOptional()
   @IsString()
   search?: string;
+
+  @ApiPropertyOptional({
+    description: 'ISO date-time. When provided, annotates results with availableCount for this time window.',
+  })
+  @IsOptional()
+  @IsDateString()
+  startTime?: string;
 }

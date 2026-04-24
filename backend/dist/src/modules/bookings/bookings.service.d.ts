@@ -3,7 +3,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { AvailabilityService } from '../availability/availability.service';
 import { CalendarService } from '../calendar/calendar.service.js';
 import { EmailService } from '../email/email.service';
-import { CreateBookingDto, QueryBookingsDto, RescheduleBookingDto, UpdateBookingStatusDto } from './dto';
+import { CreateBookingDto, QueryBookingsDto, RecoverBookingDto, RescheduleBookingDto, UpdateBookingStatusDto } from './dto';
 import type { PaginatedResponse } from '../../common/dto';
 declare const bookingWithItems: {
     bookingItems: {
@@ -26,6 +26,7 @@ export declare class BookingsService {
         booking: BookingWithItems;
         manageUrl: string;
     }>;
+    recoverBookings(dto: RecoverBookingDto): Promise<void>;
     findByToken(token: string): Promise<BookingWithItems>;
     cancelByToken(token: string, reason?: string): Promise<BookingWithItems>;
     rescheduleByToken(token: string, dto: RescheduleBookingDto): Promise<BookingWithItems>;

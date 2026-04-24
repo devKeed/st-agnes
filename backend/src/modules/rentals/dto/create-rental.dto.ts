@@ -82,6 +82,14 @@ export class CreateRentalDto {
   @IsBoolean()
   isVisible?: boolean;
 
+  @ApiPropertyOptional({ default: 1, minimum: 1, maximum: 100 })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(100)
+  quantity?: number;
+
   @ApiPropertyOptional({ default: 0 })
   @IsOptional()
   @Type(() => Number)

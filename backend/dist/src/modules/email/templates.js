@@ -4,6 +4,7 @@ exports.renderConfirmation = renderConfirmation;
 exports.renderReminder = renderReminder;
 exports.renderCancellation = renderCancellation;
 exports.renderReschedule = renderReschedule;
+exports.renderRecovery = renderRecovery;
 const SERVICE_LABEL = {
     CUSTOM_DESIGN: 'Custom Design Consultation',
     ALTERATION: 'Alteration Fitting',
@@ -114,6 +115,40 @@ function renderReschedule(ctx) {
     return {
         subject: 'Your St Agnes booking has been rescheduled',
         html: wrap(inner, 'Your St Agnes booking has been rescheduled.'),
+    };
+}
+function renderRecovery(ctx) {
+    const rows = ctx.bookings
+        .map((b) => `
+    <tr>
+      <td style="padding:12px 0;border-top:1px solid #e8e4dc;">
+        <strong>${SERVICE_LABEL[b.serviceType]}</strong> — ${formatLagos(b.startTime)}<br>
+        <a href="${b.manageUrl}" style="font-size:12px;color:#1c1c1c;">${b.manageUrl}</a>
+      </td>
+    </tr>`)
+        .join('');
+    const contactPieces = [];
+    if (ctx.contactEmail)
+        contactPieces.push(ctx.contactEmail);
+    if (ctx.contactPhone)
+        contactPieces.push(ctx.contactPhone);
+    const contactLine = contactPieces.length > 0
+        ? `<p style="margin:24px 0 0;font-size:13px;color:#8a8577;">Questions? Reach us at ${contactPieces.join(' · ')}.</p>`
+        : '';
+    const inner = `
+    <p>Hi ${ctx.clientName},</p>
+    <p>We found the following active bookings associated with your email. Use the links below to manage each one.</p>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:16px 0;border-top:1px solid #e8e4dc;border-bottom:1px solid #e8e4dc;">
+      ${rows}
+    </table>
+    <p style="font-size:12px;color:#8a8577;">
+      If you did not request this email, you can safely ignore it. These links are private — do not share them.
+    </p>
+    ${contactLine}
+  `;
+    return {
+        subject: 'Your St Agnes booking links',
+        html: wrap(inner, 'Here are your St Agnes booking manage links.'),
     };
 }
 //# sourceMappingURL=templates.js.map

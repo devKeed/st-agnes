@@ -4,4 +4,5 @@ export declare class QueryRentalsDto extends PaginationDto {
     status?: RentalStatus;
     includeHidden?: string;
     search?: string;
+    startTime?: string;
 }
