@@ -5,8 +5,10 @@ export declare class RentalsController {
     private readonly rentalsService;
     constructor(rentalsService: RentalsService);
     listPublic(query: QueryRentalsDto): Promise<import("../../common/dto").PaginatedResponse<{
-        name: string;
         id: string;
+        name: string;
+        createdAt: Date;
+        updatedAt: Date;
         description: string | null;
         sizes: string[];
         pricePerDay: import("@prisma/client-runtime-utils").Decimal;
@@ -15,15 +17,16 @@ export declare class RentalsController {
         imagePublicIds: string[];
         status: import("@prisma/client").$Enums.RentalStatus;
         isVisible: boolean;
+        quantity: number;
         sortOrder: number;
-        createdAt: Date;
-        updatedAt: Date;
     } & {
         availableCount?: number;
     }>>;
     listAdmin(query: QueryRentalsDto, _role: AdminRole): Promise<import("../../common/dto").PaginatedResponse<{
-        name: string;
         id: string;
+        name: string;
+        createdAt: Date;
+        updatedAt: Date;
         description: string | null;
         sizes: string[];
         pricePerDay: import("@prisma/client-runtime-utils").Decimal;
@@ -32,15 +35,16 @@ export declare class RentalsController {
         imagePublicIds: string[];
         status: import("@prisma/client").$Enums.RentalStatus;
         isVisible: boolean;
+        quantity: number;
         sortOrder: number;
-        createdAt: Date;
-        updatedAt: Date;
     } & {
         availableCount?: number;
     }>>;
     create(dto: CreateRentalDto): Promise<{
-        name: string;
         id: string;
+        name: string;
+        createdAt: Date;
+        updatedAt: Date;
         description: string | null;
         sizes: string[];
         pricePerDay: import("@prisma/client-runtime-utils").Decimal;
@@ -49,13 +53,14 @@ export declare class RentalsController {
         imagePublicIds: string[];
         status: import("@prisma/client").$Enums.RentalStatus;
         isVisible: boolean;
+        quantity: number;
         sortOrder: number;
-        createdAt: Date;
-        updatedAt: Date;
     }>;
     getPublic(id: string): Promise<{
-        name: string;
         id: string;
+        name: string;
+        createdAt: Date;
+        updatedAt: Date;
         description: string | null;
         sizes: string[];
         pricePerDay: import("@prisma/client-runtime-utils").Decimal;
@@ -64,13 +69,14 @@ export declare class RentalsController {
         imagePublicIds: string[];
         status: import("@prisma/client").$Enums.RentalStatus;
         isVisible: boolean;
+        quantity: number;
         sortOrder: number;
-        createdAt: Date;
-        updatedAt: Date;
     }>;
     getAdmin(id: string): Promise<{
-        name: string;
         id: string;
+        name: string;
+        createdAt: Date;
+        updatedAt: Date;
         description: string | null;
         sizes: string[];
         pricePerDay: import("@prisma/client-runtime-utils").Decimal;
@@ -79,13 +85,14 @@ export declare class RentalsController {
         imagePublicIds: string[];
         status: import("@prisma/client").$Enums.RentalStatus;
         isVisible: boolean;
+        quantity: number;
         sortOrder: number;
-        createdAt: Date;
-        updatedAt: Date;
     }>;
     update(id: string, dto: UpdateRentalDto): Promise<{
-        name: string;
         id: string;
+        name: string;
+        createdAt: Date;
+        updatedAt: Date;
         description: string | null;
         sizes: string[];
         pricePerDay: import("@prisma/client-runtime-utils").Decimal;
@@ -94,13 +101,14 @@ export declare class RentalsController {
         imagePublicIds: string[];
         status: import("@prisma/client").$Enums.RentalStatus;
         isVisible: boolean;
+        quantity: number;
         sortOrder: number;
-        createdAt: Date;
-        updatedAt: Date;
     }>;
     remove(id: string): Promise<{
-        name: string;
         id: string;
+        name: string;
+        createdAt: Date;
+        updatedAt: Date;
         description: string | null;
         sizes: string[];
         pricePerDay: import("@prisma/client-runtime-utils").Decimal;
@@ -109,8 +117,7 @@ export declare class RentalsController {
         imagePublicIds: string[];
         status: import("@prisma/client").$Enums.RentalStatus;
         isVisible: boolean;
+        quantity: number;
         sortOrder: number;
-        createdAt: Date;
-        updatedAt: Date;
     }>;
 }

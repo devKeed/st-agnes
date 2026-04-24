@@ -22,19 +22,13 @@ export function SiteHeader() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const bookingHref = '/booking#book-consultation';
+  const bookingHref = '/booking';
 
   const handleBookConsultationClick = (event: MouseEvent<HTMLAnchorElement>) => {
     if (pathname !== '/booking') return;
     event.preventDefault();
     setOpen(false);
-    const target = document.getElementById('book-consultation');
-    if (target) {
-      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      window.history.replaceState(null, '', bookingHref);
-      return;
-    }
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.location.replace('/booking');
   };
 
   useEffect(() => {
