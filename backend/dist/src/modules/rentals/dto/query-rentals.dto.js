@@ -19,6 +19,7 @@ class QueryRentalsDto extends dto_1.PaginationDto {
     includeHidden;
     search;
     startTime;
+    endTime;
 }
 exports.QueryRentalsDto = QueryRentalsDto;
 __decorate([
@@ -49,4 +50,12 @@ __decorate([
     (0, class_validator_1.IsDateString)(),
     __metadata("design:type", String)
 ], QueryRentalsDto.prototype, "startTime", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'ISO date-time. Optional range end for availability calculation. When provided with startTime, availability is computed across the full range overlap.',
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsDateString)(),
+    __metadata("design:type", String)
+], QueryRentalsDto.prototype, "endTime", void 0);
 //# sourceMappingURL=query-rentals.dto.js.map

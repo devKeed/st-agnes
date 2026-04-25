@@ -117,9 +117,10 @@ export function getPublicGallery(category?: 'COLLECTION' | 'MUSE') {
   return publicGet<GalleryRow[]>(`/gallery${query}`, 120);
 }
 
-export function getPublicRentals(startTime?: string) {
+export function getPublicRentals(startTime?: string, endTime?: string) {
   const params = new URLSearchParams({ page: '1', limit: '24' });
   if (startTime) params.set('startTime', startTime);
+  if (endTime) params.set('endTime', endTime);
   return publicGet<Paginated<RentalRow>>(`/rentals?${params.toString()}`, startTime ? 0 : 120);
 }
 

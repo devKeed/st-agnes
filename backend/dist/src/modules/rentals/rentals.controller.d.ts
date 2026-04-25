@@ -5,10 +5,8 @@ export declare class RentalsController {
     private readonly rentalsService;
     constructor(rentalsService: RentalsService);
     listPublic(query: QueryRentalsDto): Promise<import("../../common/dto").PaginatedResponse<{
-        id: string;
         name: string;
-        createdAt: Date;
-        updatedAt: Date;
+        id: string;
         description: string | null;
         sizes: string[];
         pricePerDay: import("@prisma/client-runtime-utils").Decimal;
@@ -19,14 +17,14 @@ export declare class RentalsController {
         isVisible: boolean;
         quantity: number;
         sortOrder: number;
+        createdAt: Date;
+        updatedAt: Date;
     } & {
         availableCount?: number;
     }>>;
     listAdmin(query: QueryRentalsDto, _role: AdminRole): Promise<import("../../common/dto").PaginatedResponse<{
-        id: string;
         name: string;
-        createdAt: Date;
-        updatedAt: Date;
+        id: string;
         description: string | null;
         sizes: string[];
         pricePerDay: import("@prisma/client-runtime-utils").Decimal;
@@ -37,14 +35,14 @@ export declare class RentalsController {
         isVisible: boolean;
         quantity: number;
         sortOrder: number;
+        createdAt: Date;
+        updatedAt: Date;
     } & {
         availableCount?: number;
     }>>;
     create(dto: CreateRentalDto): Promise<{
-        id: string;
         name: string;
-        createdAt: Date;
-        updatedAt: Date;
+        id: string;
         description: string | null;
         sizes: string[];
         pricePerDay: import("@prisma/client-runtime-utils").Decimal;
@@ -55,12 +53,12 @@ export declare class RentalsController {
         isVisible: boolean;
         quantity: number;
         sortOrder: number;
+        createdAt: Date;
+        updatedAt: Date;
     }>;
     getPublic(id: string): Promise<{
-        id: string;
         name: string;
-        createdAt: Date;
-        updatedAt: Date;
+        id: string;
         description: string | null;
         sizes: string[];
         pricePerDay: import("@prisma/client-runtime-utils").Decimal;
@@ -71,12 +69,12 @@ export declare class RentalsController {
         isVisible: boolean;
         quantity: number;
         sortOrder: number;
+        createdAt: Date;
+        updatedAt: Date;
     }>;
     getAdmin(id: string): Promise<{
-        id: string;
         name: string;
-        createdAt: Date;
-        updatedAt: Date;
+        id: string;
         description: string | null;
         sizes: string[];
         pricePerDay: import("@prisma/client-runtime-utils").Decimal;
@@ -87,12 +85,12 @@ export declare class RentalsController {
         isVisible: boolean;
         quantity: number;
         sortOrder: number;
+        createdAt: Date;
+        updatedAt: Date;
     }>;
     update(id: string, dto: UpdateRentalDto): Promise<{
-        id: string;
         name: string;
-        createdAt: Date;
-        updatedAt: Date;
+        id: string;
         description: string | null;
         sizes: string[];
         pricePerDay: import("@prisma/client-runtime-utils").Decimal;
@@ -103,12 +101,12 @@ export declare class RentalsController {
         isVisible: boolean;
         quantity: number;
         sortOrder: number;
+        createdAt: Date;
+        updatedAt: Date;
     }>;
     remove(id: string): Promise<{
-        id: string;
         name: string;
-        createdAt: Date;
-        updatedAt: Date;
+        id: string;
         description: string | null;
         sizes: string[];
         pricePerDay: import("@prisma/client-runtime-utils").Decimal;
@@ -119,5 +117,7 @@ export declare class RentalsController {
         isVisible: boolean;
         quantity: number;
         sortOrder: number;
+        createdAt: Date;
+        updatedAt: Date;
     }>;
 }

@@ -21,4 +21,5 @@ export declare class RentalsService {
     remove(id: string): Promise<RentalProduct>;
     private assertImageArraysAligned;
     private bestEffortDeleteFromCdn;
+    private assertQuantityCanSupportExistingBookings;
 }

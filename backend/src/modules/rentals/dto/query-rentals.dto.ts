@@ -27,4 +27,12 @@ export class QueryRentalsDto extends PaginationDto {
   @IsOptional()
   @IsDateString()
   startTime?: string;
+
+  @ApiPropertyOptional({
+    description:
+      'ISO date-time. Optional range end for availability calculation. When provided with startTime, availability is computed across the full range overlap.',
+  })
+  @IsOptional()
+  @IsDateString()
+  endTime?: string;
 }

@@ -72,17 +72,31 @@ let RentalsService = RentalsService_1 = class RentalsService {
         };
         if (query.startTime) {
             const start = new Date(query.startTime);
+            const end = query.endTime ? new Date(query.endTime) : start;
+            if (query.endTime && end <= start) {
+                throw new common_1.BadRequestException('endTime must be after startTime.');
+            }
             const ids = data.map((p) => p.id);
+            const bookingOverlapWhere = query.endTime
+                ? {
+                    AND: [
+                        { startTime: { lt: end } },
+                        { endTime: { gt: start } },
+                    ],
+                }
+                : {
+                    AND: [
+                        { startTime: { lt: start } },
+                        { endTime: { gt: start } },
+                    ],
+                };
             const counts = await this.prisma.bookingItem.groupBy({
                 by: ['rentalProductId'],
                 where: {
                     rentalProductId: { in: ids },
                     booking: {
                         status: client_1.BookingStatus.CONFIRMED,
-                        AND: [
-                            { startTime: { lt: start } },
-                            { endTime: { gt: start } },
-                        ],
+                        ...bookingOverlapWhere,
                     },
                 },
                 _count: { rentalProductId: true },
@@ -112,6 +126,10 @@ let RentalsService = RentalsService_1 = class RentalsService {
         const existing = await this.prisma.rentalProduct.findUnique({ where: { id } });
         if (!existing) {
             throw new common_1.NotFoundException(`Rental ${id} not found`);
+        }
+        if (dto.quantity !== undefined &&
+            dto.quantity < existing.quantity) {
+            await this.assertQuantityCanSupportExistingBookings(id, dto.quantity);
         }
         if (dto.imageUrls || dto.imagePublicIds) {
             const nextUrls = dto.imageUrls ?? existing.imageUrls;
@@ -167,6 +185,44 @@ let RentalsService = RentalsService_1 = class RentalsService {
             catch (error) {
                 this.logger.warn(`Failed to delete Cloudinary asset ${publicId}: ${error.message}`);
             }
+        }
+    }
+    async assertQuantityCanSupportExistingBookings(rentalProductId, nextQuantity) {
+        const now = new Date();
+        const rows = await this.prisma.bookingItem.findMany({
+            where: {
+                rentalProductId,
+                booking: {
+                    status: client_1.BookingStatus.CONFIRMED,
+                    endTime: { gt: now },
+                },
+            },
+            select: {
+                booking: {
+                    select: {
+                        startTime: true,
+                        endTime: true,
+                    },
+                },
+            },
+        });
+        if (rows.length === 0)
+            return;
+        const events = [];
+        for (const row of rows) {
+            events.push({ at: row.booking.startTime.getTime(), delta: +1 });
+            events.push({ at: row.booking.endTime.getTime(), delta: -1 });
+        }
+        events.sort((a, b) => (a.at - b.at) || (a.delta - b.delta));
+        let active = 0;
+        let peak = 0;
+        for (const event of events) {
+            active += event.delta;
+            if (active > peak)
+                peak = active;
+        }
+        if (nextQuantity < peak) {
+            throw new common_1.BadRequestException(`Quantity cannot be set to ${nextQuantity}. ${peak} unit(s) are already reserved in overlapping confirmed bookings.`);
         }
     }
 };

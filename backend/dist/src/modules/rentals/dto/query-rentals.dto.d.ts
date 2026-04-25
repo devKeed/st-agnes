@@ -5,4 +5,5 @@ export declare class QueryRentalsDto extends PaginationDto {
     includeHidden?: string;
     search?: string;
     startTime?: string;
+    endTime?: string;
 }

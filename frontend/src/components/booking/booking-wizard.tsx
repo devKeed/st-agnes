@@ -11,6 +11,7 @@ import {
   createBooking,
   getActiveTerms,
   getMonthAvailability,
+  getPublicRentals,
   type AvailabilityDay,
   type CreateBookingPayload,
   type RentalRow,
@@ -126,6 +127,8 @@ export function BookingWizard({
   const [selectedRentalSizes, setSelectedRentalSizes] = useState<Record<string, string>>(() =>
     initialRentalId && initialRentalSize ? { [initialRentalId]: initialRentalSize } : {},
   );
+  const [rentalOptions, setRentalOptions] = useState<RentalRow[]>(rentals);
+  const [rentalAvailabilityLoading, setRentalAvailabilityLoading] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -208,14 +211,64 @@ export function BookingWizard({
     return Math.max(0, days);
   }, [date, returnDate]);
 
+  useEffect(() => {
+    if (service !== 'RENTAL') return;
+
+    let active = true;
+
+    async function loadRentalAvailability() {
+      if (!date || !returnDate || rentalDays < 1) {
+        setRentalOptions(rentals);
+        return;
+      }
+
+      setRentalAvailabilityLoading(true);
+      try {
+        const startTime = new Date(`${date}T00:00:00+01:00`).toISOString();
+        const endTime = new Date(`${returnDate}T23:59:59+01:00`).toISOString();
+        const result = await getPublicRentals(startTime, endTime);
+        if (!active) return;
+        setRentalOptions(result.data);
+      } catch {
+        if (!active) return;
+        setRentalOptions(rentals);
+      } finally {
+        if (active) setRentalAvailabilityLoading(false);
+      }
+    }
+
+    void loadRentalAvailability();
+
+    return () => {
+      active = false;
+    };
+  }, [service, date, returnDate, rentalDays, rentals]);
+
+  const rentalById = useMemo(() => {
+    const map = new Map<string, RentalRow>();
+    for (const item of rentals) map.set(item.id, item);
+    for (const item of rentalOptions) map.set(item.id, item);
+    return map;
+  }, [rentals, rentalOptions]);
+
+  const unavailableSelectedRentalIds = useMemo(
+    () =>
+      selectedRentals.filter((id) => {
+        const rental = rentalById.get(id);
+        return !rental || rental.availableCount === 0;
+      }),
+    [selectedRentals, rentalById],
+  );
+
   const canContinue = useMemo(() => {
     if (step === 0) return Boolean(service);
     if (step === 1) {
       if (service === 'RENTAL') {
         if (!date || !returnDate || rentalDays < 1) return false;
         if (selectedRentals.length === 0) return false;
+        if (unavailableSelectedRentalIds.length > 0) return false;
         return selectedRentals.every((id) => {
-          const rental = rentals.find((item) => item.id === id);
+          const rental = rentalById.get(id);
           if (!rental || rental.sizes.length === 0) return true;
           return Boolean(selectedRentalSizes[id]);
         });
@@ -224,15 +277,18 @@ export function BookingWizard({
       return true;
     }
     if (step === 2) return Boolean(name && email);
-    if (step === 3) return termsAccepted;
+    if (step === 3) {
+      if (service === 'RENTAL' && unavailableSelectedRentalIds.length > 0) return false;
+      return termsAccepted;
+    }
     return false;
-  }, [step, service, date, returnDate, rentalDays, time, selectedRentals, selectedRentalSizes, rentals, name, email, termsAccepted]);
+  }, [step, service, date, returnDate, rentalDays, time, selectedRentals, unavailableSelectedRentalIds.length, selectedRentalSizes, rentalById, name, email, termsAccepted]);
 
   const { rentalDailyRate, rentalTotalCost, rentalDepositTotal } = useMemo(() => {
     let daily = 0;
     let deposit = 0;
     for (const id of selectedRentals) {
-      const r = rentals.find((x) => x.id === id);
+      const r = rentalById.get(id);
       if (!r) continue;
       daily += Number(r.pricePerDay) || 0;
       deposit += Number(r.depositAmount) || 0;
@@ -242,7 +298,7 @@ export function BookingWizard({
       rentalTotalCost: daily * (rentalDays || 1),
       rentalDepositTotal: deposit,
     };
-  }, [selectedRentals, rentals, rentalDays]);
+  }, [selectedRentals, rentalById, rentalDays]);
 
   const serviceTitle = useMemo(
     () => services.find((s) => s.key === service)?.title ?? service,
@@ -250,7 +306,7 @@ export function BookingWizard({
   );
 
   function getDefaultSize(id: string) {
-    const rental = rentals.find((item) => item.id === id);
+    const rental = rentalById.get(id);
     return rental?.sizes[0] ?? '';
   }
 
@@ -281,6 +337,10 @@ export function BookingWizard({
     setSubmitting(true);
 
     try {
+      if (service === 'RENTAL' && unavailableSelectedRentalIds.length > 0) {
+        throw new Error('One or more selected pieces are no longer available for the chosen rental period.');
+      }
+
       const terms = await getActiveTerms();
 
       const payload: CreateBookingPayload = {
@@ -567,9 +627,17 @@ export function BookingWizard({
                       </div>
                     ) : (
                       <div className="space-y-3 border-t border-border/60 pt-3">
+                        {rentalAvailabilityLoading ? (
+                          <p className="text-[11px] text-muted-foreground">Checking live stock for your dates…</p>
+                        ) : null}
+                        {unavailableSelectedRentalIds.length > 0 ? (
+                          <p className="text-[11px] text-red-600">
+                            One or more selected pieces are no longer available in this period. Remove unavailable items to continue.
+                          </p>
+                        ) : null}
                         <div className="space-y-3">
                           {selectedRentals.map((id) => {
-                            const r = rentals.find((x) => x.id === id);
+                            const r = rentalById.get(id);
                             if (!r) return null;
                             const thumb = r.imageUrls?.[0];
                             const isUnavailable = r.availableCount !== undefined && r.availableCount === 0;
@@ -714,12 +782,18 @@ export function BookingWizard({
               {service === 'RENTAL' && selectedRentals.length > 0 && (
                 <div className="border-t border-border/60">
                   <p className="px-5 pt-4 text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Pieces</p>
+                  {unavailableSelectedRentalIds.length > 0 && (
+                    <p className="px-5 pt-2 text-xs text-red-600">
+                      Some selected pieces are no longer available for this period. Please go back and update your selection.
+                    </p>
+                  )}
                   <ul className="divide-y divide-border/50 px-5 pb-1 pt-2">
                     {selectedRentals.map((id) => {
-                      const r = rentals.find((item) => item.id === id);
+                      const r = rentalById.get(id);
                       if (!r) return null;
                       const thumb = r.imageUrls?.[0];
                       const size = selectedRentalSizes[id];
+                      const isUnavailable = r.availableCount !== undefined && r.availableCount === 0;
                       return (
                         <li key={id} className="flex items-center gap-3 py-2.5">
                           <div className="relative h-14 w-11 shrink-0 overflow-hidden rounded-md bg-muted">
@@ -730,6 +804,9 @@ export function BookingWizard({
                             <p className="text-[11px] text-muted-foreground">
                               {size ? `Size ${size} · ` : ''}₦{Number(r.pricePerDay).toLocaleString()}/day
                             </p>
+                            {isUnavailable ? (
+                              <p className="text-[11px] text-red-600">Unavailable for this period</p>
+                            ) : null}
                           </div>
                         </li>
                       );
