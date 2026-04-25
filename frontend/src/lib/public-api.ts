@@ -47,6 +47,7 @@ export interface CreateBookingPayload {
   clientPhone?: string;
   serviceType: 'CUSTOM_DESIGN' | 'ALTERATION' | 'RENTAL';
   startTime: string;
+  rentalEndDate?: string;
   notes?: string;
   specialRequests?: string;
   rentalItems?: Array<{ rentalProductId: string; selectedSize?: string }>;

@@ -36,6 +36,7 @@ class CreateBookingDto {
     clientPhone;
     serviceType;
     startTime;
+    rentalEndDate;
     notes;
     specialRequests;
     rentalItems;
@@ -67,10 +68,19 @@ __decorate([
     __metadata("design:type", String)
 ], CreateBookingDto.prototype, "serviceType", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ example: '2026-05-10T08:00:00.000Z', description: 'UTC ISO start time.' }),
+    (0, swagger_1.ApiProperty)({ example: '2026-05-10T08:00:00.000Z', description: 'UTC ISO start time. For RENTAL bookings this is the pickup date (start of day).' }),
     (0, class_validator_1.IsDateString)(),
     __metadata("design:type", String)
 ], CreateBookingDto.prototype, "startTime", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        example: '2026-05-12',
+        description: 'ISO date string (YYYY-MM-DD) for the rental return date. Required for RENTAL bookings; ignored for other service types.',
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsDateString)(),
+    __metadata("design:type", String)
+], CreateBookingDto.prototype, "rentalEndDate", void 0);
 __decorate([
     (0, swagger_1.ApiPropertyOptional)({
         description: 'Optional notes (reason for visit, preferences, etc.)',

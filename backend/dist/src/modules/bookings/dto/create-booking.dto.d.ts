@@ -9,6 +9,7 @@ export declare class CreateBookingDto {
     clientPhone?: string;
     serviceType: ServiceType;
     startTime: string;
+    rentalEndDate?: string;
     notes?: string;
     specialRequests?: string;
     rentalItems?: RentalItemDto[];

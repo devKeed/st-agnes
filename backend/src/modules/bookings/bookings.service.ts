@@ -56,18 +56,44 @@ export class BookingsService {
 
     const startTime = new Date(dto.startTime);
 
-    const config = await this.prisma.serviceTypeConfig.findUnique({
-      where: { serviceType: dto.serviceType },
-    });
-    if (!config || !config.isActive) {
-      throw new BadRequestException(
-        `Service type ${dto.serviceType} is not available.`,
-      );
-    }
+    const isRental = dto.serviceType === ServiceType.RENTAL;
 
-    const endTime = new Date(
-      startTime.getTime() + config.durationMinutes * 60_000,
-    );
+    // For RENTAL, endTime is end-of-day on the return date (WAT +01:00).
+    // For appointments, endTime is derived from the service config duration.
+    let endTime: Date;
+    let durationMinutes: number;
+
+    if (isRental) {
+      if (!dto.rentalEndDate) {
+        throw new BadRequestException(
+          'rentalEndDate is required for RENTAL bookings.',
+        );
+      }
+      if (!dto.rentalItems || dto.rentalItems.length === 0) {
+        throw new BadRequestException(
+          'At least one rental item is required for a RENTAL booking.',
+        );
+      }
+      // End of return date in WAT (+01:00)
+      endTime = new Date(`${dto.rentalEndDate}T23:59:59+01:00`);
+      if (endTime <= startTime) {
+        throw new BadRequestException(
+          'Return date must be after the pickup date.',
+        );
+      }
+      durationMinutes = Math.round((endTime.getTime() - startTime.getTime()) / 60_000);
+    } else {
+      const config = await this.prisma.serviceTypeConfig.findUnique({
+        where: { serviceType: dto.serviceType },
+      });
+      if (!config || !config.isActive) {
+        throw new BadRequestException(
+          `Service type ${dto.serviceType} is not available.`,
+        );
+      }
+      endTime = new Date(startTime.getTime() + config.durationMinutes * 60_000);
+      durationMinutes = config.durationMinutes;
+    }
 
     const termsVersion = await this.prisma.termsVersion.findUnique({
       where: { id: dto.termsVersionId },
@@ -78,34 +104,28 @@ export class BookingsService {
       );
     }
 
-    if (dto.serviceType === ServiceType.RENTAL) {
-      if (!dto.rentalItems || dto.rentalItems.length === 0) {
-        throw new BadRequestException(
-          'At least one rental item is required for a RENTAL booking.',
-        );
-      }
-    }
-
     const manageToken = nanoid(32);
     const frontendUrl =
       process.env.FRONTEND_URL ?? 'http://localhost:3000';
 
     const booking = await this.prisma.$transaction(async (tx) => {
-      // 1. Check slot availability inside the transaction so the read and write
-      //    are atomic — prevents double-bookings under concurrent requests.
-      const isAvailable = await this.availabilityService.isSlotAvailable(
-        startTime,
-        endTime,
-        undefined,
-        tx,
-      );
-      if (!isAvailable) {
-        throw new ConflictException(
-          'The requested time slot is not available. Please choose a different time.',
+      if (!isRental) {
+        // Only appointment-style bookings need slot availability checked against
+        // business hours and blocked dates. Rentals span full days with no time slot.
+        const isAvailable = await this.availabilityService.isSlotAvailable(
+          startTime,
+          endTime,
+          undefined,
+          tx,
         );
+        if (!isAvailable) {
+          throw new ConflictException(
+            'The requested time slot is not available. Please choose a different time.',
+          );
+        }
       }
 
-      // 2. Validate rental items (if applicable)
+      // Validate rental items (if applicable)
       if (dto.serviceType === ServiceType.RENTAL && dto.rentalItems) {
         for (const item of dto.rentalItems) {
           const product = await tx.rentalProduct.findUnique({
@@ -158,7 +178,7 @@ export class BookingsService {
           clientEmail: dto.clientEmail,
           clientPhone: dto.clientPhone,
           serviceType: dto.serviceType,
-          durationMinutes: config.durationMinutes,
+          durationMinutes,
           startTime,
           endTime,
           notes: dto.notes,

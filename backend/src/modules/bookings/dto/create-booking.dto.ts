@@ -47,9 +47,17 @@ export class CreateBookingDto {
   @IsEnum(ServiceType)
   serviceType!: ServiceType;
 
-  @ApiProperty({ example: '2026-05-10T08:00:00.000Z', description: 'UTC ISO start time.' })
+  @ApiProperty({ example: '2026-05-10T08:00:00.000Z', description: 'UTC ISO start time. For RENTAL bookings this is the pickup date (start of day).' })
   @IsDateString()
   startTime!: string;
+
+  @ApiPropertyOptional({
+    example: '2026-05-12',
+    description: 'ISO date string (YYYY-MM-DD) for the rental return date. Required for RENTAL bookings; ignored for other service types.',
+  })
+  @IsOptional()
+  @IsDateString()
+  rentalEndDate?: string;
 
   @ApiPropertyOptional({
     description:
