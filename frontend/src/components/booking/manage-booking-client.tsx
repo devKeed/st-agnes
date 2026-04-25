@@ -1,8 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { formatLagos } from '@/lib/utils';
 import {
   cancelBookingByToken,
   getBookingByToken,
@@ -26,6 +27,8 @@ export function ManageBookingClient({ token }: ManageBookingClientProps) {
   const [newDate, setNewDate] = useState('');
   const [newTime, setNewTime] = useState('');
 
+  const bookingCode = useMemo(() => token.slice(0, 8).toUpperCase(), [token]);
+
   async function loadBooking() {
     setError(null);
     setLoading(true);
@@ -45,6 +48,11 @@ export function ManageBookingClient({ token }: ManageBookingClientProps) {
   }, [token]);
 
   async function cancelBooking() {
+    const shouldCancel = window.confirm(
+      'Are you sure you want to cancel this booking? This action cannot be undone.',
+    );
+    if (!shouldCancel) return;
+
     setError(null);
     setLoading(true);
     try {
@@ -87,17 +95,29 @@ export function ManageBookingClient({ token }: ManageBookingClientProps) {
       {booking ? (
         <div className="space-y-3 rounded-xl border p-5">
           <p className="text-sm">
+            <span className="font-medium">Booking code:</span>{' '}
+            <span className="rounded bg-muted px-2 py-0.5 font-mono text-xs tracking-wider text-foreground">{bookingCode}</span>
+          </p>
+          <p className="text-sm">
             <span className="font-medium">Status:</span> {booking.status}
           </p>
           <p className="text-sm">
             <span className="font-medium">Service:</span> {booking.serviceType}
           </p>
           <p className="text-sm">
-            <span className="font-medium">Start:</span> {new Date(booking.startTime).toLocaleString()}
+            <span className="font-medium">{booking.serviceType === 'RENTAL' ? 'Pickup:' : 'Start:'}</span>{' '}
+            {formatLagos(booking.startTime)}
           </p>
           <p className="text-sm">
-            <span className="font-medium">End:</span> {new Date(booking.endTime).toLocaleString()}
+            <span className="font-medium">{booking.serviceType === 'RENTAL' ? 'Return:' : 'End:'}</span>{' '}
+            {formatLagos(booking.endTime)}
           </p>
+
+          {booking.serviceType === 'RENTAL' ? (
+            <p className="rounded-md border border-stone-200 bg-stone-50 px-3 py-2 text-xs text-muted-foreground">
+              No online payment. Rental fee and refundable deposit are collected at studio pickup.
+            </p>
+          ) : null}
 
           <div className="grid gap-3 md:grid-cols-2">
             <input

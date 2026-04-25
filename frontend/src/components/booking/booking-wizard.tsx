@@ -750,9 +750,12 @@ export function BookingWizard({
                       </div>
                     )}
                     <div className="flex justify-between text-sm font-semibold text-stone-900">
-                      <span>Total due</span>
+                      <span>Estimated total</span>
                       <span>₦{(rentalTotalCost + rentalDepositTotal).toLocaleString()}</span>
                     </div>
+                    <p className="text-[11px] text-muted-foreground">
+                      Rental fee and deposit are collected at studio pickup.
+                    </p>
                   </div>
                 </div>
               )}

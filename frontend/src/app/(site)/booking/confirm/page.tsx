@@ -17,6 +17,7 @@ export default async function BookingConfirmPage({ searchParams }: Props) {
   const manageUrl = resolved.manageUrl;
   const manageHref =
     manageUrl ?? (manageToken ? `/booking-manage/${encodeURIComponent(manageToken)}` : undefined);
+  const bookingCode = manageToken ? manageToken.slice(0, 8).toUpperCase() : null;
 
   return (
     <section className="mx-auto w-full max-w-[1440px] px-5 py-24 md:px-10 md:py-32">
@@ -35,6 +36,14 @@ export default async function BookingConfirmPage({ searchParams }: Props) {
         <p className="mt-4 text-sm text-muted-foreground">
           Use <span className="font-medium text-foreground">Manage this booking</span> to reschedule or cancel later.
         </p>
+
+        {bookingCode ? (
+          <p className="mt-3 text-sm text-muted-foreground">
+            Booking code:{' '}
+            <span className="rounded bg-muted px-2 py-0.5 font-mono text-xs tracking-wider text-foreground">{bookingCode}</span>
+            {' '}— present this at the studio for quick lookup.
+          </p>
+        ) : null}
 
         <div className="mt-10 flex flex-wrap justify-center gap-4">
           {manageHref ? (

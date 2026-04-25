@@ -330,6 +330,7 @@ export class BookingsService {
   ): Promise<PaginatedResponse<BookingWithItems>> {
     const page = query.page ?? 1;
     const limit = query.limit ?? 20;
+    const search = query.search?.trim();
 
     const where: Prisma.BookingWhereInput = {
       ...(query.status ? { status: query.status } : {}),
@@ -342,11 +343,12 @@ export class BookingsService {
             },
           }
         : {}),
-      ...(query.search
+      ...(search
         ? {
             OR: [
-              { clientName: { contains: query.search, mode: 'insensitive' } },
-              { clientEmail: { contains: query.search, mode: 'insensitive' } },
+              { clientName: { contains: search, mode: 'insensitive' } },
+              { clientEmail: { contains: search, mode: 'insensitive' } },
+              { manageToken: { contains: search, mode: 'insensitive' } },
             ],
           }
         : {}),

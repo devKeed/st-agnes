@@ -223,6 +223,7 @@ let BookingsService = BookingsService_1 = class BookingsService {
     async findAll(query) {
         const page = query.page ?? 1;
         const limit = query.limit ?? 20;
+        const search = query.search?.trim();
         const where = {
             ...(query.status ? { status: query.status } : {}),
             ...(query.serviceType ? { serviceType: query.serviceType } : {}),
@@ -234,11 +235,12 @@ let BookingsService = BookingsService_1 = class BookingsService {
                     },
                 }
                 : {}),
-            ...(query.search
+            ...(search
                 ? {
                     OR: [
-                        { clientName: { contains: query.search, mode: 'insensitive' } },
-                        { clientEmail: { contains: query.search, mode: 'insensitive' } },
+                        { clientName: { contains: search, mode: 'insensitive' } },
+                        { clientEmail: { contains: search, mode: 'insensitive' } },
+                        { manageToken: { contains: search, mode: 'insensitive' } },
                     ],
                 }
                 : {}),

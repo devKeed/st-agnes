@@ -29,6 +29,7 @@ interface BookingItem {
 
 interface BookingSummary {
   id: string;
+  manageToken: string;
   clientName: string;
   clientEmail: string;
   serviceType: ServiceType;
@@ -121,12 +122,12 @@ export default function AdminBookingsPage() {
       <Card>
         <CardHeader>
           <CardTitle>Filters</CardTitle>
-          <CardDescription>Search by client name/email, service, or status.</CardDescription>
+          <CardDescription>Search by client name, email, or booking code.</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid gap-3 md:grid-cols-3">
             <Input
-              placeholder="Search name or email"
+              placeholder="Search name, email, or code"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
@@ -199,6 +200,9 @@ export default function AdminBookingsPage() {
                     return (
                       <tr key={booking.id}>
                         <td className="px-6 py-3 align-top">
+                          <div className="mb-1 text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
+                            Code · <span className="font-mono text-foreground">{booking.manageToken.slice(0, 8).toUpperCase()}</span>
+                          </div>
                           <div className="font-medium">{booking.clientName}</div>
                           <div className="text-xs text-muted-foreground">{booking.clientEmail}</div>
                           {booking.bookingItems.length > 0 && (
