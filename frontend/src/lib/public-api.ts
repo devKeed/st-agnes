@@ -19,6 +19,7 @@ export interface RentalRow {
   description: string | null;
   sizes: string[];
   pricePerDay: string | number;
+  depositAmount?: string | number;
   imageUrls: string[];
   quantity?: number;
   availableCount?: number;

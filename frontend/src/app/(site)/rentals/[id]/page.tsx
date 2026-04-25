@@ -100,12 +100,6 @@ export default async function RentalDetailPage({ params }: Props) {
                 </div>
               </dl>
 
-              {sizes.length > 0 ? (
-                <p className="mt-4 text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
-                  Select a size to prefill your booking.
-                </p>
-              ) : null}
-
               <div className="mt-10 flex flex-col gap-4">
                 <Link href={bookingHref} className="btn-premium w-full">Book this piece</Link>
                 <Link href="/rentals" className="btn-ghost-premium w-full">View more rentals</Link>

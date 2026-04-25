@@ -131,6 +131,14 @@ export function BookingWizard({
   const [error, setError] = useState<string | null>(null);
   const [rentalsWithAvailability, setRentalsWithAvailability] = useState<RentalRow[]>(rentals);
 
+  function handleServiceSelect(nextService: ServiceKey) {
+    if (nextService === 'RENTAL') {
+      router.push('/rentals');
+      return;
+    }
+    setService(nextService);
+  }
+
   // Re-fetch rentals with availability counts whenever the user picks a time slot
   useEffect(() => {
     if (service !== 'RENTAL' || !time) {
@@ -332,7 +340,7 @@ export function BookingWizard({
               <button
                 key={item.key}
                 type="button"
-                onClick={() => setService(item.key as ServiceKey)}
+                onClick={() => handleServiceSelect(item.key as ServiceKey)}
                 className={`group rounded-2xl border p-4 text-left transition-all ${
                   service === item.key
                     ? 'border-stone-900 bg-stone-900 text-white shadow-md'

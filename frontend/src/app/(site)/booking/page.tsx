@@ -45,7 +45,7 @@ export default async function BookingPage({ searchParams }: Props) {
     <div>
       {/* HEADER */}
       <section className="border-b border-border/60 bg-surface/40">
-        <div className="mx-auto w-full max-w-[1440px] px-5 py-20 md:px-10 md:py-24">
+        <div className="mx-auto w-full max-w-[1440px] px-5 py-12 md:px-10 md:py-16">
           <div className="grid gap-8 md:grid-cols-12 md:items-end">
             <div className="md:col-span-7">
               <p className="section-index">{t('booking_eyebrow', 'Concierge — Booking')}</p>
@@ -70,7 +70,7 @@ export default async function BookingPage({ searchParams }: Props) {
       {/* WIZARD */}
       <section
         id="book-consultation"
-        className="mx-auto w-full max-w-[1440px] scroll-mt-24 px-5 py-16 md:px-10 md:py-20"
+        className="mx-auto w-full max-w-[1440px] scroll-mt-24 px-5 py-10 md:px-10 md:py-14"
       >
         <BookingWizard
           rentals={rentalsData}
