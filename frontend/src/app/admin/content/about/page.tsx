@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ApiError, apiFetch } from '@/lib/api';
+import { ApiError, apiFetch, apiUploadImage } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -62,6 +62,7 @@ export default function AboutContentPage() {
   const initialRef = useRef('');
   const [form, setForm] = useState<Form>(EMPTY);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [isUploadingHeroImage, setIsUploadingHeroImage] = useState(false);
 
   const contentQuery = useQuery({ queryKey: ['content', 'admin'], queryFn: () => apiFetch<SiteContent[]>('/content') });
 
@@ -108,6 +109,21 @@ export default function AboutContentPage() {
     onError: (error) => setFeedback({ type: 'error', text: err(error) }),
   });
 
+  async function onUploadHeroImage(file: File | null) {
+    if (!file) return;
+    setFeedback(null);
+    setIsUploadingHeroImage(true);
+    try {
+      const uploaded = await apiUploadImage(file, 'st-agnes/content');
+      setForm((p) => ({ ...p, about_hero_image: uploaded.url }));
+      setFeedback({ type: 'success', text: 'Image uploaded successfully.' });
+    } catch (error) {
+      setFeedback({ type: 'error', text: err(error) });
+    } finally {
+      setIsUploadingHeroImage(false);
+    }
+  }
+
   return (
     <div className="space-y-8">
       <Link href="/admin/content" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground">← Content</Link>
@@ -145,6 +161,15 @@ export default function AboutContentPage() {
             </FieldRow>
             <FieldRow label="Hero background image URL">
               <div className="space-y-2">
+                <Input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => void onUploadHeroImage(e.target.files?.[0] ?? null)}
+                  disabled={isUploadingHeroImage}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Upload image from device (auto-fills URL) or paste a URL manually.
+                </p>
                 <Input type="url" value={form.about_hero_image} onChange={set('about_hero_image')} placeholder="https://…" />
                 {form.about_hero_image && isValidUrl(form.about_hero_image) && (
                   <div className="overflow-hidden rounded-md border bg-muted" style={{ height: 100 }}>

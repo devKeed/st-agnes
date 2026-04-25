@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ApiError, apiFetch } from '@/lib/api';
+import { ApiError, apiFetch, apiUploadImage } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -85,6 +85,7 @@ export default function HomeContentPage() {
   const initialRef = useRef('');
   const [form, setForm] = useState<Form>(EMPTY_FORM);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [uploadingField, setUploadingField] = useState<keyof Form | null>(null);
 
   const contentQuery = useQuery({
     queryKey: ['content', 'admin'],
@@ -142,8 +143,32 @@ export default function HomeContentPage() {
 
   const handleSave = () => saveMutation.mutate();
 
+  async function onUploadImage(fieldKey: keyof Form, file: File | null) {
+    if (!file) return;
+    setFeedback(null);
+    setUploadingField(fieldKey);
+    try {
+      const uploaded = await apiUploadImage(file, 'st-agnes/content');
+      setForm((p) => ({ ...p, [fieldKey]: uploaded.url }));
+      setFeedback({ type: 'success', text: 'Image uploaded successfully.' });
+    } catch (error) {
+      setFeedback({ type: 'error', text: errorMessage(error) });
+    } finally {
+      setUploadingField(null);
+    }
+  }
+
   const ImageInput = ({ fieldKey }: { fieldKey: keyof Form }) => (
     <div className="space-y-2">
+      <Input
+        type="file"
+        accept="image/*"
+        onChange={(e) => void onUploadImage(fieldKey, e.target.files?.[0] ?? null)}
+        disabled={uploadingField === fieldKey}
+      />
+      <p className="text-xs text-muted-foreground">
+        Upload image from device (auto-fills URL) or paste a URL manually.
+      </p>
       <Input type="url" value={form[fieldKey]} onChange={set(fieldKey)} placeholder="https://…" />
       {form[fieldKey] && isValidUrl(form[fieldKey]) && (
         <div className="overflow-hidden rounded-md border bg-muted" style={{ height: 100 }}>
