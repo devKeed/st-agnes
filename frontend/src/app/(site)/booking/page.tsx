@@ -78,6 +78,12 @@ export default async function BookingPage({ searchParams }: Props) {
           initialRentalId={initialRental?.id}
           initialRentalSize={initialRentalSize}
         />
+        <p className="mt-6 text-center text-xs text-muted-foreground">
+          Already booked?{' '}
+          <a href="/booking/recover" className="underline underline-offset-2 hover:text-foreground">
+            Find my booking
+          </a>
+        </p>
       </section>
     </div>
   );

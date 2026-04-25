@@ -14,6 +14,7 @@ const primaryLinks = [
 
 const secondaryLinks = [
   { href: '/booking', label: 'Booking' },
+  { href: '/booking/recover', label: 'Find my booking' },
   { href: '/terms', label: 'Terms' },
   { href: '/privacy', label: 'Privacy' },
 ];
