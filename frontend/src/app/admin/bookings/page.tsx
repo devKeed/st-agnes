@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ApiError, apiFetch } from '@/lib/api';
-import { formatLagos } from '@/lib/utils';
+import { formatLagos, getBookingCodeFromToken } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -201,7 +201,7 @@ export default function AdminBookingsPage() {
                       <tr key={booking.id}>
                         <td className="px-6 py-3 align-top">
                           <div className="mb-1 text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
-                            Code · <span className="font-mono text-foreground">{booking.manageToken.slice(0, 8).toUpperCase()}</span>
+                            Code · <span className="font-mono text-foreground">{getBookingCodeFromToken(booking.manageToken)}</span>
                           </div>
                           <div className="font-medium">{booking.clientName}</div>
                           <div className="text-xs text-muted-foreground">{booking.clientEmail}</div>

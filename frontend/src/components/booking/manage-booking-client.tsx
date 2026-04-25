@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { formatLagos } from '@/lib/utils';
+import { formatLagos, getBookingCodeFromToken } from '@/lib/utils';
 import {
   cancelBookingByToken,
   getBookingByToken,
@@ -27,7 +27,7 @@ export function ManageBookingClient({ token }: ManageBookingClientProps) {
   const [newDate, setNewDate] = useState('');
   const [newTime, setNewTime] = useState('');
 
-  const bookingCode = useMemo(() => token.slice(0, 8).toUpperCase(), [token]);
+  const bookingCode = useMemo(() => getBookingCodeFromToken(token), [token]);
 
   async function loadBooking() {
     setError(null);

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { ManageBookingClient } from '@/components/booking/manage-booking-client';
+import { getBookingCodeFromToken } from '@/lib/utils';
 
 interface Props {
   params: Promise<{ token: string }>;
@@ -18,7 +19,7 @@ export default async function BookingManagePage({ params }: Props) {
     notFound();
   }
 
-  const bookingCode = resolved.token.slice(0, 8).toUpperCase();
+  const bookingCode = getBookingCodeFromToken(resolved.token);
 
   return (
     <div className="mx-auto w-full max-w-[1440px] px-5 py-20 md:px-10 md:py-28">

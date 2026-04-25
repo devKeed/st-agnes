@@ -330,9 +330,11 @@ export class BookingsService {
   ): Promise<PaginatedResponse<BookingWithItems>> {
     const page = query.page ?? 1;
     const limit = query.limit ?? 20;
-    const search = query.search?.trim();
+    const search = query.search?.trim() ?? '';
+    const searchLower = search.toLowerCase();
+    const normalizedSearch = search.replace(/[^a-z0-9]/gi, '').toLowerCase();
 
-    const where: Prisma.BookingWhereInput = {
+    const whereBase: Prisma.BookingWhereInput = {
       ...(query.status ? { status: query.status } : {}),
       ...(query.serviceType ? { serviceType: query.serviceType } : {}),
       ...(query.dateFrom || query.dateTo
@@ -343,27 +345,50 @@ export class BookingsService {
             },
           }
         : {}),
-      ...(search
-        ? {
-            OR: [
-              { clientName: { contains: search, mode: 'insensitive' } },
-              { clientEmail: { contains: search, mode: 'insensitive' } },
-              { manageToken: { contains: search, mode: 'insensitive' } },
-            ],
-          }
-        : {}),
     };
 
-    const [data, total] = await this.prisma.$transaction([
-      this.prisma.booking.findMany({
-        where,
-        include: bookingWithItems,
-        orderBy: { startTime: 'desc' },
-        skip: (page - 1) * limit,
-        take: limit,
-      }),
-      this.prisma.booking.count({ where }),
-    ]);
+    if (!search) {
+      const [data, total] = await this.prisma.$transaction([
+        this.prisma.booking.findMany({
+          where: whereBase,
+          include: bookingWithItems,
+          orderBy: { startTime: 'desc' },
+          skip: (page - 1) * limit,
+          take: limit,
+        }),
+        this.prisma.booking.count({ where: whereBase }),
+      ]);
+
+      return {
+        data,
+        meta: { total, page, limit, totalPages: Math.max(1, Math.ceil(total / limit)) },
+      };
+    }
+
+    const allCandidates = await this.prisma.booking.findMany({
+      where: whereBase,
+      include: bookingWithItems,
+      orderBy: { startTime: 'desc' },
+    });
+
+    const filtered = allCandidates.filter((booking) => {
+      const clientName = booking.clientName.toLowerCase();
+      const clientEmail = booking.clientEmail.toLowerCase();
+      const token = booking.manageToken.toLowerCase();
+      const normalizedToken = booking.manageToken
+        .replace(/[^a-z0-9]/gi, '')
+        .toLowerCase();
+
+      return (
+        clientName.includes(searchLower) ||
+        clientEmail.includes(searchLower) ||
+        token.includes(searchLower) ||
+        (normalizedSearch.length > 0 && normalizedToken.includes(normalizedSearch))
+      );
+    });
+
+    const total = filtered.length;
+    const data = filtered.slice((page - 1) * limit, page * limit);
 
     return {
       data,

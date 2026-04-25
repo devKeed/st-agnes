@@ -16,3 +16,8 @@ export function formatLagos(isoDate: string | Date): string {
     timeZone: 'Africa/Lagos',
   }).format(date);
 }
+
+export function getBookingCodeFromToken(token: string): string {
+  const normalized = token.replace(/[^a-z0-9]/gi, '').toUpperCase();
+  return normalized.slice(0, 8);
+}

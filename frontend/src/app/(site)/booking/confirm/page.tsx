@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Check } from 'lucide-react';
+import { getBookingCodeFromToken } from '@/lib/utils';
 
 export const metadata: Metadata = {
   title: 'Booking Confirmed | St Agnes',
@@ -17,7 +18,7 @@ export default async function BookingConfirmPage({ searchParams }: Props) {
   const manageUrl = resolved.manageUrl;
   const manageHref =
     manageUrl ?? (manageToken ? `/booking-manage/${encodeURIComponent(manageToken)}` : undefined);
-  const bookingCode = manageToken ? manageToken.slice(0, 8).toUpperCase() : null;
+  const bookingCode = manageToken ? getBookingCodeFromToken(manageToken) : null;
 
   return (
     <section className="mx-auto w-full max-w-[1440px] px-5 py-24 md:px-10 md:py-32">
