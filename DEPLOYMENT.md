@@ -5,6 +5,15 @@ This guide deploys:
 - `backend/` to **Render**
 - PostgreSQL on **Render Postgres** (or any managed Postgres)
 
+## Production profile (not test)
+
+Use these minimum tiers for real users:
+- Render Web Service: **Starter or higher** (avoid sleep/cold starts)
+- Render PostgreSQL: **Starter or higher** (persistent + backups)
+- Vercel: **Pro recommended** for production traffic and team controls
+
+Do not use free-tier database for long-term production.
+
 ## 1) Create production database
 
 Create a managed PostgreSQL database and copy the connection string.
@@ -98,3 +107,14 @@ Frontend:
 - Backend already reads `PORT` and enables CORS from `FRONTEND_URL`.
 - Frontend already reads `NEXT_PUBLIC_API_URL`.
 - Build has been validated locally with `npm run build` from repository root.
+
+## Go-live hardening checklist
+
+- [ ] Use strong, unique secrets for `JWT_SECRET`, `JWT_REFRESH_SECRET`, and (if used) `GOOGLE_OAUTH_STATE_SECRET`
+- [ ] Set `FRONTEND_URL` to only your real production domain (no wildcard)
+- [ ] Set custom domains for frontend and backend
+- [ ] Enable TLS/HTTPS (default on Render + Vercel)
+- [ ] Configure database backups and confirm restore process
+- [ ] Seed admin once, then rotate `ADMIN_PASSWORD` to a long unique value
+- [ ] If Swagger should be private, restrict access at edge/network level
+- [ ] Validate booking flow, admin login, email delivery, and uploads in production domain
