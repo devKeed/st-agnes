@@ -170,6 +170,25 @@ export default function AdminSettingsPage() {
     onSuccess: (data) => {
       setFeedback('Opening Google consent screen…');
       window.open(data.url, '_blank', 'noopener,noreferrer');
+
+      // Poll status every 2s for up to 60s so the page auto-updates after OAuth completes
+      const started = Date.now();
+      const interval = setInterval(() => {
+        if (Date.now() - started > 60_000) {
+          clearInterval(interval);
+          setFeedback('Check status manually if the connection did not update.');
+          return;
+        }
+        apiFetch<CalendarStatus>('/calendar/status')
+          .then((status) => {
+            if (status.connected) {
+              clearInterval(interval);
+              void queryClient.invalidateQueries({ queryKey: ['calendar', 'status'] });
+              setFeedback('Google Calendar connected successfully.');
+            }
+          })
+          .catch(() => {/* ignore polling errors */});
+      }, 2000);
     },
     onError: (error) => setFeedback(errorMessage(error)),
   });

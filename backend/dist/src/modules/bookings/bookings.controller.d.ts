@@ -16,12 +16,12 @@ export declare class BookingsController {
     getByToken(token: string): Promise<{
         bookingItems: ({
             rentalProduct: {
-                name: string;
                 id: string;
-                status: import("@prisma/client").$Enums.RentalStatus;
+                description: string | null;
                 createdAt: Date;
                 updatedAt: Date;
-                description: string | null;
+                name: string;
+                status: import("@prisma/client").$Enums.RentalStatus;
                 sizes: string[];
                 pricePerDay: import("@prisma/client-runtime-utils").Decimal;
                 depositAmount: import("@prisma/client-runtime-utils").Decimal;
@@ -40,36 +40,36 @@ export declare class BookingsController {
         })[];
     } & {
         id: string;
+        serviceType: import("@prisma/client").$Enums.ServiceType;
+        durationMinutes: number;
+        createdAt: Date;
+        updatedAt: Date;
+        startTime: Date;
+        endTime: Date;
+        googleEventId: string | null;
         clientName: string;
         clientEmail: string;
         clientPhone: string | null;
-        serviceType: import("@prisma/client").$Enums.ServiceType;
-        durationMinutes: number;
-        startTime: Date;
-        endTime: Date;
         notes: string | null;
         specialRequests: string | null;
         status: import("@prisma/client").$Enums.BookingStatus;
         manageToken: string;
-        googleEventId: string | null;
         termsVersionId: string | null;
         termsAccepted: boolean;
         termsAcceptedAt: Date | null;
         cancellationReason: string | null;
-        createdAt: Date;
-        updatedAt: Date;
     }>;
     cancelByToken(token: string, body: {
         reason?: string;
     }): Promise<{
         bookingItems: ({
             rentalProduct: {
-                name: string;
                 id: string;
-                status: import("@prisma/client").$Enums.RentalStatus;
+                description: string | null;
                 createdAt: Date;
                 updatedAt: Date;
-                description: string | null;
+                name: string;
+                status: import("@prisma/client").$Enums.RentalStatus;
                 sizes: string[];
                 pricePerDay: import("@prisma/client-runtime-utils").Decimal;
                 depositAmount: import("@prisma/client-runtime-utils").Decimal;
@@ -88,34 +88,34 @@ export declare class BookingsController {
         })[];
     } & {
         id: string;
+        serviceType: import("@prisma/client").$Enums.ServiceType;
+        durationMinutes: number;
+        createdAt: Date;
+        updatedAt: Date;
+        startTime: Date;
+        endTime: Date;
+        googleEventId: string | null;
         clientName: string;
         clientEmail: string;
         clientPhone: string | null;
-        serviceType: import("@prisma/client").$Enums.ServiceType;
-        durationMinutes: number;
-        startTime: Date;
-        endTime: Date;
         notes: string | null;
         specialRequests: string | null;
         status: import("@prisma/client").$Enums.BookingStatus;
         manageToken: string;
-        googleEventId: string | null;
         termsVersionId: string | null;
         termsAccepted: boolean;
         termsAcceptedAt: Date | null;
         cancellationReason: string | null;
-        createdAt: Date;
-        updatedAt: Date;
     }>;
     rescheduleByToken(token: string, dto: RescheduleBookingDto): Promise<{
         bookingItems: ({
             rentalProduct: {
-                name: string;
                 id: string;
-                status: import("@prisma/client").$Enums.RentalStatus;
+                description: string | null;
                 createdAt: Date;
                 updatedAt: Date;
-                description: string | null;
+                name: string;
+                status: import("@prisma/client").$Enums.RentalStatus;
                 sizes: string[];
                 pricePerDay: import("@prisma/client-runtime-utils").Decimal;
                 depositAmount: import("@prisma/client-runtime-utils").Decimal;
@@ -134,35 +134,35 @@ export declare class BookingsController {
         })[];
     } & {
         id: string;
+        serviceType: import("@prisma/client").$Enums.ServiceType;
+        durationMinutes: number;
+        createdAt: Date;
+        updatedAt: Date;
+        startTime: Date;
+        endTime: Date;
+        googleEventId: string | null;
         clientName: string;
         clientEmail: string;
         clientPhone: string | null;
-        serviceType: import("@prisma/client").$Enums.ServiceType;
-        durationMinutes: number;
-        startTime: Date;
-        endTime: Date;
         notes: string | null;
         specialRequests: string | null;
         status: import("@prisma/client").$Enums.BookingStatus;
         manageToken: string;
-        googleEventId: string | null;
         termsVersionId: string | null;
         termsAccepted: boolean;
         termsAcceptedAt: Date | null;
         cancellationReason: string | null;
-        createdAt: Date;
-        updatedAt: Date;
     }>;
     recoverBookings(dto: RecoverBookingDto): Promise<void>;
     listAll(query: QueryBookingsDto): Promise<import("../../common/dto").PaginatedResponse<{
         bookingItems: ({
             rentalProduct: {
-                name: string;
                 id: string;
-                status: import("@prisma/client").$Enums.RentalStatus;
+                description: string | null;
                 createdAt: Date;
                 updatedAt: Date;
-                description: string | null;
+                name: string;
+                status: import("@prisma/client").$Enums.RentalStatus;
                 sizes: string[];
                 pricePerDay: import("@prisma/client-runtime-utils").Decimal;
                 depositAmount: import("@prisma/client-runtime-utils").Decimal;
@@ -181,34 +181,34 @@ export declare class BookingsController {
         })[];
     } & {
         id: string;
+        serviceType: import("@prisma/client").$Enums.ServiceType;
+        durationMinutes: number;
+        createdAt: Date;
+        updatedAt: Date;
+        startTime: Date;
+        endTime: Date;
+        googleEventId: string | null;
         clientName: string;
         clientEmail: string;
         clientPhone: string | null;
-        serviceType: import("@prisma/client").$Enums.ServiceType;
-        durationMinutes: number;
-        startTime: Date;
-        endTime: Date;
         notes: string | null;
         specialRequests: string | null;
         status: import("@prisma/client").$Enums.BookingStatus;
         manageToken: string;
-        googleEventId: string | null;
         termsVersionId: string | null;
         termsAccepted: boolean;
         termsAcceptedAt: Date | null;
         cancellationReason: string | null;
-        createdAt: Date;
-        updatedAt: Date;
     }>>;
     getOne(id: string): Promise<{
         bookingItems: ({
             rentalProduct: {
-                name: string;
                 id: string;
-                status: import("@prisma/client").$Enums.RentalStatus;
+                description: string | null;
                 createdAt: Date;
                 updatedAt: Date;
-                description: string | null;
+                name: string;
+                status: import("@prisma/client").$Enums.RentalStatus;
                 sizes: string[];
                 pricePerDay: import("@prisma/client-runtime-utils").Decimal;
                 depositAmount: import("@prisma/client-runtime-utils").Decimal;
@@ -227,34 +227,34 @@ export declare class BookingsController {
         })[];
     } & {
         id: string;
+        serviceType: import("@prisma/client").$Enums.ServiceType;
+        durationMinutes: number;
+        createdAt: Date;
+        updatedAt: Date;
+        startTime: Date;
+        endTime: Date;
+        googleEventId: string | null;
         clientName: string;
         clientEmail: string;
         clientPhone: string | null;
-        serviceType: import("@prisma/client").$Enums.ServiceType;
-        durationMinutes: number;
-        startTime: Date;
-        endTime: Date;
         notes: string | null;
         specialRequests: string | null;
         status: import("@prisma/client").$Enums.BookingStatus;
         manageToken: string;
-        googleEventId: string | null;
         termsVersionId: string | null;
         termsAccepted: boolean;
         termsAcceptedAt: Date | null;
         cancellationReason: string | null;
-        createdAt: Date;
-        updatedAt: Date;
     }>;
     updateStatus(id: string, dto: UpdateBookingStatusDto): Promise<{
         bookingItems: ({
             rentalProduct: {
-                name: string;
                 id: string;
-                status: import("@prisma/client").$Enums.RentalStatus;
+                description: string | null;
                 createdAt: Date;
                 updatedAt: Date;
-                description: string | null;
+                name: string;
+                status: import("@prisma/client").$Enums.RentalStatus;
                 sizes: string[];
                 pricePerDay: import("@prisma/client-runtime-utils").Decimal;
                 depositAmount: import("@prisma/client-runtime-utils").Decimal;
@@ -273,23 +273,23 @@ export declare class BookingsController {
         })[];
     } & {
         id: string;
+        serviceType: import("@prisma/client").$Enums.ServiceType;
+        durationMinutes: number;
+        createdAt: Date;
+        updatedAt: Date;
+        startTime: Date;
+        endTime: Date;
+        googleEventId: string | null;
         clientName: string;
         clientEmail: string;
         clientPhone: string | null;
-        serviceType: import("@prisma/client").$Enums.ServiceType;
-        durationMinutes: number;
-        startTime: Date;
-        endTime: Date;
         notes: string | null;
         specialRequests: string | null;
         status: import("@prisma/client").$Enums.BookingStatus;
         manageToken: string;
-        googleEventId: string | null;
         termsVersionId: string | null;
         termsAccepted: boolean;
         termsAcceptedAt: Date | null;
         cancellationReason: string | null;
-        createdAt: Date;
-        updatedAt: Date;
     }>;
 }

@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { formatLagos, getBookingCodeFromToken } from '@/lib/utils';
+import { formatLagos, getBookingCodeFromToken, localDateStr } from '@/lib/utils';
 import {
   cancelBookingByToken,
   getBookingByToken,
@@ -123,6 +123,7 @@ export function ManageBookingClient({ token }: ManageBookingClientProps) {
             <input
               type="date"
               value={newDate}
+              min={localDateStr()}
               onChange={(e) => setNewDate(e.target.value)}
               className="rounded-md border bg-background px-3 py-2 text-sm"
             />

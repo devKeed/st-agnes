@@ -27,8 +27,19 @@ let CalendarController = class CalendarController {
     getAuthUrl(adminId) {
         return this.calendarService.getAuthUrl(adminId);
     }
-    async handleCallback(code, state, error) {
-        return this.calendarService.handleOAuthCallback({ code, state, error });
+    async handleCallback(code, state, error, res) {
+        const frontendUrl = process.env.FRONTEND_URL ?? 'http://localhost:3000';
+        const callbackBase = `${frontendUrl}/admin/settings/calendar-callback`;
+        try {
+            const result = await this.calendarService.handleOAuthCallback({ code, state, error });
+            const params = new URLSearchParams({ success: String(result.success), message: result.message });
+            return res.redirect(`${callbackBase}?${params.toString()}`);
+        }
+        catch (err) {
+            const message = err instanceof Error ? err.message : 'Something went wrong.';
+            const params = new URLSearchParams({ success: 'false', message });
+            return res.redirect(`${callbackBase}?${params.toString()}`);
+        }
     }
     getStatus() {
         return this.calendarService.getStatus();
@@ -58,8 +69,9 @@ __decorate([
     __param(0, (0, common_1.Query)('code')),
     __param(1, (0, common_1.Query)('state')),
     __param(2, (0, common_1.Query)('error')),
+    __param(3, (0, common_1.Res)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String, String]),
+    __metadata("design:paramtypes", [String, String, String, Object]),
     __metadata("design:returntype", Promise)
 ], CalendarController.prototype, "handleCallback", null);
 __decorate([

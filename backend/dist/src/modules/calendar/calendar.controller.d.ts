@@ -1,3 +1,4 @@
+import type { Response } from 'express';
 import { CalendarService } from './calendar.service.js';
 import { UpdateCalendarIdDto } from './dto/update-calendar-id.dto';
 export declare class CalendarController {
@@ -6,15 +7,7 @@ export declare class CalendarController {
     getAuthUrl(adminId: string): {
         url: string;
     };
-    handleCallback(code?: string, state?: string, error?: string): Promise<{
-        success: boolean;
-        message: string;
-        calendarId?: undefined;
-    } | {
-        success: boolean;
-        message: string;
-        calendarId: string;
-    }>;
+    handleCallback(code?: string, state?: string, error?: string, res?: Response): Promise<void>;
     getStatus(): Promise<{
         connected: boolean;
         calendarId: null;

@@ -16,6 +16,7 @@ import {
   type CreateBookingPayload,
   type RentalRow,
 } from '@/lib/public-api';
+import { localDateStr } from '@/lib/utils';
 import { services } from '@/lib/public-data';
 
 const STEP_LABELS = ['Service', 'Date & Time', 'Details', 'Review'] as const;
@@ -81,7 +82,7 @@ function buildCalendarCells(monthValue: string, availableDates: Set<string>) {
     cells.push({
       date,
       dayNumber: day,
-      isAvailable: availableDates.has(date),
+      isAvailable: date >= todayString && availableDates.has(date),
       isToday: date === todayString,
     });
   }
@@ -158,9 +159,10 @@ export function BookingWizard({
         const days = result.available_slots ?? [];
         setAvailabilityDays(days);
 
-        const hasSelectedDate = days.some((d) => d.date === date);
+        const todayStr = localDateStr();
+        const hasSelectedDate = days.some((d) => d.date === date && d.date >= todayStr);
         if (!hasSelectedDate) {
-          const firstDay = days[0]?.date ?? '';
+          const firstDay = days.find((d) => d.date >= todayStr)?.date ?? '';
           setDate(firstDay);
           setTime('');
         }
@@ -450,7 +452,7 @@ export function BookingWizard({
                         id="pickup-date"
                         type="date"
                         value={date}
-                        min={new Date().toISOString().split('T')[0]}
+                        min={localDateStr()}
                         onChange={(e) => {
                           setDate(e.target.value);
                           if (returnDate && returnDate <= e.target.value) setReturnDate('');
@@ -467,8 +469,8 @@ export function BookingWizard({
                         type="date"
                         value={returnDate}
                         min={date
-                          ? new Date(new Date(date).getTime() + 86_400_000).toISOString().split('T')[0]
-                          : new Date().toISOString().split('T')[0]}
+                          ? localDateStr(new Date(new Date(date).getTime() + 86_400_000))
+                          : localDateStr()}
                         onChange={(e) => setReturnDate(e.target.value)}
                         disabled={!date}
                         className="w-full rounded-xl border border-stone-200 bg-white px-3 py-2.5 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-900/20 disabled:cursor-not-allowed disabled:opacity-50"
@@ -492,7 +494,8 @@ export function BookingWizard({
                       <button
                         type="button"
                         onClick={() => setMonth((prev) => shiftMonth(prev, -1))}
-                        className="inline-flex items-center gap-1 rounded-lg border border-stone-200 bg-stone-50 px-2.5 py-1 text-xs text-stone-700 transition-colors hover:border-stone-400"
+                        disabled={month <= getCurrentMonthValue()}
+                        className="inline-flex items-center gap-1 rounded-lg border border-stone-200 bg-stone-50 px-2.5 py-1 text-xs text-stone-700 transition-colors hover:border-stone-400 disabled:cursor-not-allowed disabled:opacity-40"
                       >
                         <ChevronLeft className="h-3.5 w-3.5" />
                         Prev
