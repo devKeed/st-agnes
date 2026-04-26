@@ -55,3 +55,9 @@ npm run dev:reset
 ```bash
 npm run build
 ```
+
+## Production deployment
+
+Use the full deployment guide here:
+
+- [DEPLOYMENT.md](DEPLOYMENT.md)
