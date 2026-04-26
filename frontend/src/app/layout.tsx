@@ -21,6 +21,15 @@ export const metadata: Metadata = {
   title: 'St Agnes — Atelier of Craft & Occasion',
   description:
     'St Agnes is an atelier of bespoke design, precision alterations, and curated rental pieces for life\'s most memorable occasions.',
+  manifest: '/manifest.json',
+  icons: {
+    icon: [
+      { url: '/favicon.ico', sizes: '32x32' },
+      { url: '/icon.png', type: 'image/png', sizes: '32x32' },
+    ],
+    apple: [{ url: '/apple-icon.png', sizes: '180x180', type: 'image/png' }],
+  },
+  themeColor: '#2C2218',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
